@@ -11,7 +11,7 @@ export enum OrderStatus {
 @Entity()
 export class Order {
     @PrimaryGeneratedColumn()
-    id: string;
+    id: number;
 
     @ManyToOne(() => User, (user) => user.orders, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
