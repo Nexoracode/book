@@ -5,6 +5,10 @@ import { Address } from "./address.entity";
 
 export enum OrderStatus {
     PENDING = 'Pending',
+    PROCESSING = 'Processing',
+    COMPLETED = 'Completed',
+    FAIL_PAYMENT = 'FailPayment',
+    FAIL_VERIFY = 'FailVerify',
     CANCELED = 'Canceled'
 }
 

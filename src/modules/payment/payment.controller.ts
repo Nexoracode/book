@@ -5,8 +5,8 @@ import { PaymentService } from './payment.service';
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) { }
 
-  @Post('pay/:id')
-  paymentRequest(@Param('id') id: string) {
+  @Post('pay')
+  paymentRequest(@Query('orderId') id: string) {
     const callbackUrl = `http://localhost:3000/payment/verify?orderId=${id}`;
     return this.paymentService.paymentRequest(+id, callbackUrl);
   }

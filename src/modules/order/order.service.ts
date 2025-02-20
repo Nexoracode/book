@@ -17,6 +17,12 @@ export class OrderService {
     @InjectRepository(Address) private addressRepo: Repository<Address>
   ) { }
 
+  async updateStatus(orderId: number, status: OrderStatus) {
+    const order = await this.findOne(orderId);
+    order.status = status;
+    await this.orderRepo.save(order);
+  }
+
 
   async findOne(orderId: number) {
     const order = await this.orderRepo.findOne({ where: { id: orderId } });
@@ -27,7 +33,6 @@ export class OrderService {
   }
 
   async addToOrder(dto: CreateOrderDto) {
-
     const product = await this.productRepo.findOne({ where: { id: dto.productId } });
     if (!product) {
       throw new NotFoundException('Product not found');

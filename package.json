@@ -17,7 +17,11 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "typeorm:generate": "npx typeorm migration:generate -d src/database/data-source.ts -n",
+    "typeorm:migrate": "npx typeorm migration:run -d dist/database/data-source.js",
+    "typeorm:revert": "npx typeorm migration:revert -d dist/database/data-source.js",
+    "typeorm:show": "npx typeorm migration:show -d dist/database/data-source.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -33,7 +37,6 @@
     "mysql2": "^3.12.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.20",
     "zarinpal-checkout": "^0.3.0"
   },
   "devDependencies": {
@@ -60,6 +63,7 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "typeorm": "^0.3.20",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
