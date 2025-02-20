@@ -9,6 +9,7 @@ import { ProductModule } from './modules/product/product.module';
 import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { UserModule } from './modules/user/user.module';
+import { InvoiceModule } from './modules/invoice/invoice.module';
 
 ConfigModule.forRoot();
 @Module({
@@ -18,7 +19,8 @@ ConfigModule.forRoot();
     ProductModule,
     OrderModule,
     PaymentModule,
-    UserModule
+    UserModule,
+    InvoiceModule
   ],
   controllers: [AppController],
   providers: [AppService],
