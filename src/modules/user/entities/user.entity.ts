@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Order } from "src/modules/order/entities/order.entity";
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -14,24 +15,15 @@ export class User {
     @Column({ type: 'varchar', length: 11 })
     phone: string;
 
-    @Column({ type: 'varchar', length: 100 })
-    province: string;
+    @Column({ nullable: true })
+    password?: string;
 
-    @Column({ type: 'varchar', length: 100 })
-    city: string;
+    @OneToMany(() => Order, (order) => order.user)
+    orders: Order[]
 
-    @Column({ type: 'text' })
-    street: string;
-
-    @Column({ type: 'varchar', length: 10, nullable: true })
-    plaque: string;
-
-    @Column({ type: 'varchar', length: 20, nullable: true })
-    postalCode: string;
-
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'crated_at' })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'updated_at' })
     updatedAt: Date;
 }

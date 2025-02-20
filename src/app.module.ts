@@ -6,7 +6,6 @@ import { ConfigModule } from '@nestjs/config';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { ProductModule } from './modules/product/product.module';
-import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { UserModule } from './modules/user/user.module';
@@ -17,7 +16,6 @@ ConfigModule.forRoot();
     AppConfigModule,
     DatabaseModule,
     ProductModule,
-    CartModule,
     OrderModule,
     PaymentModule,
     UserModule

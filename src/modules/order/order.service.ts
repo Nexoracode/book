@@ -1,26 +1,51 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Order, OrderStatus } from './entities/order.entity';
+import { Repository } from 'typeorm';
+import { Product } from '../product/entities/product.entity';
+import { User } from '../user/entities/user.entity';
+import { Address } from './entities/address.entity';
 
 @Injectable()
 export class OrderService {
-  create(createOrderDto: CreateOrderDto) {
-    return 'This action adds a new order';
-  }
+  constructor(
+    @InjectRepository(Order) private orderRepo: Repository<Order>,
+    @InjectRepository(Product) private productRepo: Repository<Product>,
+    @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(Address) private addressRepo: Repository<Address>
+  ) { }
 
-  findAll() {
-    return `This action returns all order`;
-  }
+  async addToOrder(dto: CreateOrderDto) {
 
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
-  }
+    const product = await this.productRepo.findOne({ where: { id: dto.productId } });
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
-  }
+    let user = await this.userRepo.findOne({ where: { phone: dto.phone } });
+    if (!user) {
+      user = this.userRepo.create({
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        phone: dto.phone,
+      })
+      await this.userRepo.save(user);
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} order`;
+    const order = this.orderRepo.create({
+      user,
+      product,
+      totalAmount: product.price * dto.quantity,
+      quantity: dto.quantity,
+      status: OrderStatus.PENDING,
+    });
+
+    const address = this.addressRepo.create(dto);
+    await this.addressRepo.save(address);
+    order.address = address;
+    await this.orderRepo.save(order);
+    return order;
   }
 }
