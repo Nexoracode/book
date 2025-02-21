@@ -5,6 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Invoice } from '../invoice/entities/invoice.entity';
 import { Repository } from 'typeorm';
 import { OrderStatus } from '../order/entities/order.entity';
+import { ProductService } from '../product/product.service';
+import { SmsService } from '../sms/sms.service';
 
 @Injectable()
 export class PaymentService {
@@ -12,6 +14,8 @@ export class PaymentService {
 
   constructor(
     private orderService: OrderService,
+    private productService: ProductService,
+    private smsService: SmsService,
     @InjectRepository(Invoice) private invoiceRepo: Repository<Invoice>
   ) {
     this.zarinpal = ZarinpalCheckout.create(`${process.env.ZARINPAL}`, true);
@@ -20,8 +24,9 @@ export class PaymentService {
 
   async addToInvoice(orderId: number, transactionId: number, paymentMethod: string) {
     const order = await this.orderService.findOne(orderId);
+    const amount = (+order.totalAmount + 40_000);
     const invoice = this.invoiceRepo.create({
-      amount: order.totalAmount,
+      amount: amount,
       transactionId,
       paymentMethod,
       order,
@@ -32,8 +37,9 @@ export class PaymentService {
 
   async paymentRequest(orderId: number, callbackUrl: string) {
     const order = await this.orderService.findOne(orderId);
+    const amount = (+order.totalAmount + 40_000);
     const response = await this.zarinpal.PaymentRequest({
-      Amount: order.totalAmount,
+      Amount: amount,
       CallbackURL: callbackUrl,
       Description: 'خرید کتاب نماز باحال'
     })
@@ -52,27 +58,47 @@ export class PaymentService {
 
   async verifyRequest(authority: string, orderId: number) {
     const order = await this.orderService.findOne(orderId);
-    const response = await this.zarinpal.PaymentVerification({
-      Amount: order.totalAmount,
-      Authority: authority,
-    })
-    if (response.status === 100) {
-      await this.orderService.updateStatus(order.id, OrderStatus.COMPLETED);
-      const invoice = this.invoiceRepo.create({
-        amount: order.totalAmount,
-        transactionId: response.refId,
-        paymentMethod: 'Zarinpal',
-        order,
+    const amount = (+order.totalAmount + 40_000);
+    const product = await this.productService.finOne(order.product.id);
+    try {
+      const response = await this.zarinpal.PaymentVerification({
+        Amount: amount,
+        Authority: authority,
       })
-      await this.invoiceRepo.save(invoice)
-      return {
-        message: 'پرداخت با موفیت انجام شد',
-        statusCode: 200,
-        data: response,
+      if (response.status === 100) {
+        await this.orderService.updateStatus(order.id, OrderStatus.COMPLETED);
+        const invoice = this.invoiceRepo.create({
+          amount: amount,
+          transactionId: response.refId,
+          paymentMethod: 'Zarinpal',
+          order,
+        })
+        await this.invoiceRepo.save(invoice)
+        const stock = product.stock - order.quantity;
+        await this.productService.updateStock(product.id, stock);
+        const { firstName, lastName, phone } = order.user;
+        const fullName = `${firstName} ${lastName}`;
+        this.smsService.sendSms(phone, fullName, response.refId.toString())
+        const { user, address, ...result } = order;
+        return {
+          message: 'پرداخت با موفیت انجام شد',
+          statusCode: 200,
+          data: {
+            date: new Date().toISOString(),
+            payment: response,
+            order: result,
+          },
+        }
       }
-    } else {
+    } catch (e) {
       await this.orderService.updateStatus(order.id, OrderStatus.FAIL_VERIFY);
-      throw new Error('verify payment error');
+      const { user, address, ...result } = order;
+      return {
+        data: {
+          date: new Date().toISOString(),
+          order: result,
+        },
+      }
     }
   }
 }

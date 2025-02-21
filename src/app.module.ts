@@ -10,19 +10,21 @@ import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { UserModule } from './modules/user/user.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
-import { typeOrmConfig } from './config/typeorm.config';
+import { dataSourceOption } from 'db/data-source';
+import { SmsModule } from './modules/sms/sms.module';
 
 ConfigModule.forRoot();
 @Module({
   imports: [
     AppConfigModule,
-    TypeOrmModule.forRoot(typeOrmConfig),
+    TypeOrmModule.forRoot(dataSourceOption),
     DatabaseModule,
     ProductModule,
     OrderModule,
     PaymentModule,
     UserModule,
-    InvoiceModule
+    InvoiceModule,
+    SmsModule
   ],
   controllers: [AppController],
   providers: [AppService],

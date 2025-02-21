@@ -22,6 +22,15 @@ export class ProductService {
     }
   }
 
+  async find() {
+    const product = await this.productRepo.find();
+    return {
+      message: 'get all products successfully',
+      statusCode: 200,
+      data: product,
+    };
+  }
+
   async finOne(id: number) {
     const product = await this.productRepo.findOne({ where: { id } })
     if (!product) {
