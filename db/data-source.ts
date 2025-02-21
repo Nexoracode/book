@@ -19,4 +19,4 @@ export const dataSourceOption: DataSourceOptions = {
 const dataSource = new DataSource(dataSourceOption);
 export default dataSource;
 
-console.log(process.env.NODE_ENV)
+console.log(`.env.${process.env.NODE_ENV}`)
