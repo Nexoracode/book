@@ -13,7 +13,7 @@ export const dataSourceOption: DataSourceOptions = {
     entities: ['dist/**/*.entity{.js,.ts}'],
     migrations: [__dirname + '/migrations/*.js'],
     logging: false,
-    synchronize: process.env.NODE_ENV === 'development',
+    synchronize: false,
 };
 
 const dataSource = new DataSource(dataSourceOption);
