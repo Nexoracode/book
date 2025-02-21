@@ -9,7 +9,7 @@ export const dataSourceOption: DataSourceOptions = {
     port: 3306,
     username: "root",
     password: "XWxfzJFQN7rhXillQtPqJCI2",
-    database: "manaz-bahal",
+    database: "namaz-bahal",
     entities: ['dist/**/*.entity{.js,.ts}'],
     migrations: [__dirname + '/migrations/*.js'],
     logging: false,
