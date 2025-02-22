@@ -34,7 +34,7 @@ export class AuthService {
   async authRegister(registerDto: RegisterAuthDto) {
     const user = await this.userService.findPhoneOne(registerDto.phone!);
     if (user) {
-      throw new BadRequestException('کاربری با این شماره موجود دارد');
+      throw new BadRequestException('کاربری با این شماره وجود دارد');
     } else {
       const hashedPassword = await bcrypt.hash(registerDto.password, 10);
       registerDto.password = hashedPassword;
