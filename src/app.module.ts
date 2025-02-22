@@ -12,6 +12,7 @@ import { UserModule } from './modules/user/user.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
 import { dataSourceOption } from 'db/data-source';
 import { SmsModule } from './modules/sms/sms.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 ConfigModule.forRoot();
 @Module({
@@ -24,7 +25,8 @@ ConfigModule.forRoot();
     PaymentModule,
     UserModule,
     InvoiceModule,
-    SmsModule
+    SmsModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

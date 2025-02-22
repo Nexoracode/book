@@ -9,19 +9,4 @@ export class CreateUserDto {
 
     @IsNotEmpty()
     phone: string;
-
-    @IsNotEmpty()
-    province: string;
-
-    @IsNotEmpty()
-    city: string;
-
-    @IsNotEmpty()
-    street: string;
-
-    @IsNotEmpty()
-    plaque: string;
-
-    @IsNotEmpty()
-    postalCode: string;
 }

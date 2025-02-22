@@ -13,7 +13,11 @@ export class UserService {
   ) { }
 
   async create(createUserDto: CreateUserDto) {
-    const user = await this.userRepo.findOne({ where: { phone: createUserDto.phone } });
+    const user = await this.userRepo.findOne({
+      where: { phone: createUserDto.phone }, select: [
+        'firstName', 'lastName', 'phone', 'password'
+      ]
+    });
     if (user) {
       throw new BadRequestException('user exists');
     }
@@ -30,8 +34,25 @@ export class UserService {
     return `This action returns all user`;
   }
 
-  findOne(id: number) {
-    return `This action find a #${id} user`;
+  async findOne(id: number) {
+    const user = await this.userRepo.findOne({
+      where: { id }, select: [
+        'firstName', 'lastName', 'phone', 'password',
+      ]
+    });
+    if (!user) {
+      throw new NotFoundException("user not found");
+    }
+    return user;
+  }
+
+  async findPhoneOne(phone: string) {
+    const user = await this.userRepo.findOne({
+      where: { phone }, select: [
+        'firstName', 'lastName', 'phone', 'password',
+      ]
+    });
+    return user;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

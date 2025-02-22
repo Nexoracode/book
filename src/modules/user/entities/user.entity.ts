@@ -1,5 +1,10 @@
 import { Order } from "src/modules/order/entities/order.entity";
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+
+export enum UserRole {
+    USER = 'User',
+    PASSWORD = 'Password',
+}
 
 @Entity()
 export class User {

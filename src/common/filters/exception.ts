@@ -19,7 +19,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
             exception instanceof HttpException
                 ? exception.getStatus()
                 : HttpStatus.INTERNAL_SERVER_ERROR;
-
         const errorResponse =
             exception instanceof HttpException
                 ? (exception.getResponse() as any)
@@ -39,10 +38,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         this.logger.error(
             `\n🔴 EXCEPTION ERROR :  \n
             STATUS CODE -> ${errorObject.statusCode}
+            MESSAGE -> ${errorObject.message}
             PATH -> ${errorObject.path}`,
-            exception instanceof Error ? exception.stack : ''
         );
-
         response.status(status).json(errorObject);
     }
 }
