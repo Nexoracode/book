@@ -1,8 +1,9 @@
+import { ConfigModule } from "@nestjs/config";
 import * as dotenv from "dotenv";
 const envFile = `.env.${process.env.NODE_ENV || "development"}`;
 dotenv.config({ path: envFile });
 import { DataSource, DataSourceOptions } from 'typeorm';
-
+// ConfigModule.forRoot();
 // export const dataSourceOption: DataSourceOptions = {
 //     type: 'mysql',
 //     host: "academy",

@@ -11,13 +11,11 @@ import { UserModule } from './modules/user/user.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
 import { SmsModule } from './modules/sms/sms.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { dataSourceOption } from './database/data-source';
 
 ConfigModule.forRoot();
 @Module({
   imports: [
     AppConfigModule,
-    TypeOrmModule.forRoot(dataSourceOption),
     ProductModule,
     OrderModule,
     PaymentModule,
