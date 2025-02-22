@@ -67,13 +67,7 @@ export class PaymentService {
       })
       if (response.status === 100) {
         const newRole = await this.orderService.updateStatus(order.id, OrderStatus.COMPLETED);
-        const invoice = this.invoiceRepo.create({
-          amount: amount,
-          transactionId: response.refId,
-          paymentMethod: 'Zarinpal',
-          order,
-        })
-        await this.invoiceRepo.save(invoice)
+        await this.addToInvoice(order.id, response.refId, 'Zarinpal')
         const stock = product.stock - order.quantity;
         await this.productService.updateStock(product.id, stock);
         const { firstName, lastName, phone } = order.user;

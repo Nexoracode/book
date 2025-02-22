@@ -2,6 +2,7 @@ import { Product } from "src/modules/product/entities/product.entity";
 import { User } from "src/modules/user/entities/user.entity";
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Address } from "./address.entity";
+import { Invoice } from "src/modules/invoice/entities/invoice.entity";
 
 export enum OrderStatus {
     PENDING = 'Pending',
@@ -24,11 +25,14 @@ export class Order {
     @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
     status: OrderStatus
 
+    @OneToMany(() => Invoice, (invoice) => invoice.order)
+    invoice: Invoice[]
+
     @ManyToOne(() => Product,)
     @JoinColumn({ name: 'product_id' })
     product: Product;
 
-    @Column('decimal')
+    @Column('decimal', { name: 'total_amount' })
     totalAmount: number;
 
     @Column({ default: 1 })

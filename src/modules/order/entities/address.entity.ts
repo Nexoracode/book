@@ -19,7 +19,7 @@ export class Address {
     @Column({ type: 'varchar', length: 10, nullable: true })
     plaque: string;
 
-    @Column({ type: 'varchar', length: 20, nullable: true })
+    @Column({ name: 'postal_code', type: 'varchar', length: 20, nullable: true })
     postalCode: string;
 
     @OneToMany(() => Order, (order) => order.address, { cascade: true })

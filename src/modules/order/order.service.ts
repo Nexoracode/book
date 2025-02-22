@@ -3,10 +3,11 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order, OrderStatus } from './entities/order.entity';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Product } from '../product/entities/product.entity';
 import { User } from '../user/entities/user.entity';
 import { Address } from './entities/address.entity';
+import { FilterOperator, FilterSuffix, Paginate, PaginateQuery, paginate, Paginated } from 'nestjs-paginate'
 
 @Injectable()
 export class OrderService {
@@ -26,11 +27,29 @@ export class OrderService {
 
 
   async findOne(orderId: number) {
-    const order = await this.orderRepo.findOne({ where: { id: orderId }, relations: ['user', 'address', 'product'] });
+    const order = await this.orderRepo.findOne({ where: { id: orderId }, relations: ['user', 'address', 'product', 'invoice'] });
     if (!order) {
       throw new NotFoundException();
     }
     return order;
+  }
+
+  async finalAll() {
+    return await this.orderRepo.find({ relations: ['user', 'address', 'invoice', 'product'] })
+  }
+
+  async findAllPaginate(query: PaginateQuery): Promise<Paginated<Order>> {
+    return paginate(query, this.orderRepo, {
+      relations: ['invoice', 'product', 'user', 'address'],
+      select: ['user.id', 'user.lastName', 'user.firstName', 'user.phone'],
+      sortableColumns: ['id', 'createdAt'],
+      defaultSortBy: [['createdAt', 'DESC']],
+      searchableColumns: ['invoice.amount', 'user.phone', 'user.(firstName', 'user.lastName)', 'id'],
+      filterableColumns: {
+        status: [FilterOperator.EQ],
+        createdAt: [FilterOperator.GTE, FilterOperator.LTE]
+      }
+    });
   }
 
   async addToOrder(dto: CreateOrderDto) {
