@@ -21,6 +21,7 @@ export class OrderService {
     const order = await this.findOne(orderId);
     order.status = status;
     await this.orderRepo.save(order);
+    return order;
   }
 
 

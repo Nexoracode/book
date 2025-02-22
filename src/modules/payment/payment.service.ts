@@ -66,7 +66,7 @@ export class PaymentService {
         Authority: authority,
       })
       if (response.status === 100) {
-        await this.orderService.updateStatus(order.id, OrderStatus.COMPLETED);
+        const newRole = await this.orderService.updateStatus(order.id, OrderStatus.COMPLETED);
         const invoice = this.invoiceRepo.create({
           amount: amount,
           transactionId: response.refId,
@@ -79,7 +79,7 @@ export class PaymentService {
         const { firstName, lastName, phone } = order.user;
         const fullName = `${firstName} ${lastName}`;
         this.smsService.sendSms(phone, fullName, response.refId.toString())
-        const { user, address, ...result } = order;
+        const { user, address, ...result } = newRole;
         return {
           message: 'پرداخت با موفیت انجام شد',
           statusCode: 200,
@@ -91,8 +91,8 @@ export class PaymentService {
         }
       }
     } catch (e) {
-      await this.orderService.updateStatus(order.id, OrderStatus.FAIL_VERIFY);
-      const { user, address, ...result } = order;
+      const newRole = await this.orderService.updateStatus(order.id, OrderStatus.FAIL_VERIFY);
+      const { user, address, ...result } = newRole;
       return {
         data: {
           date: new Date().toISOString(),
