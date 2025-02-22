@@ -8,8 +8,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe);
   app.useGlobalFilters(new AllExceptionsFilter()),
     app.enableCors({
-      origin: ['https://bookshops.liara.run'],
-      // origin: '*',
+      // origin: ['https://bookshops.liara.run'],
+      origin: '*',
       methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
       credentials: true,
     })
