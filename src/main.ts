@@ -6,12 +6,13 @@ import { AllExceptionsFilter } from './common/filters/exception';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe);
-  app.useGlobalFilters(new AllExceptionsFilter()),
-    app.enableCors({
-      origin: ['https://bookshops.liara.run'],
-      methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-      credentials: true,
-    })
+  // app.useGlobalFilters(new AllExceptionsFilter()),
+  app.enableCors({
+    origin: ['https://bookshops.liara.run', 'http://localhost:3002'],
+    // origin: '*',
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
   await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
