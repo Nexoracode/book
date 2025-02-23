@@ -1,11 +1,5 @@
 import { Order } from "src/modules/order/entities/order.entity";
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-
-export enum UserRole {
-    USER = 'User',
-    PASSWORD = 'Password',
-}
-
 @Entity()
 export class User {
     @PrimaryGeneratedColumn()
@@ -19,9 +13,6 @@ export class User {
 
     @Column({ type: 'varchar', length: 11 })
     phone: string;
-
-    @Column({ nullable: true })
-    password?: string;
 
     @OneToMany(() => Order, (order) => order.user)
     orders: Order[]

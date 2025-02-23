@@ -15,7 +15,7 @@ export class UserService {
   async create(createUserDto: CreateUserDto) {
     const user = await this.userRepo.findOne({
       where: { phone: createUserDto.phone }, select: [
-        'firstName', 'lastName', 'phone', 'password'
+        'firstName', 'lastName', 'phone',
       ]
     });
     if (user) {
@@ -37,7 +37,7 @@ export class UserService {
   async findOne(id: number) {
     const user = await this.userRepo.findOne({
       where: { id }, select: [
-        'firstName', 'lastName', 'phone', 'password',
+        'firstName', 'lastName', 'phone',
       ]
     });
     if (!user) {
@@ -49,7 +49,7 @@ export class UserService {
   async findPhoneOne(phone: string) {
     const user = await this.userRepo.findOne({
       where: { phone }, select: [
-        'firstName', 'lastName', 'phone', 'password',
+        'firstName', 'lastName', 'phone',
       ]
     });
     return user;

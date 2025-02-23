@@ -10,6 +10,7 @@ import { UserModule } from './modules/user/user.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
 import { SmsModule } from './modules/sms/sms.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { EmployeesModule } from './modules/employees/employees.module';
 
 ConfigModule.forRoot();
 @Module({
@@ -21,7 +22,8 @@ ConfigModule.forRoot();
     UserModule,
     InvoiceModule,
     SmsModule,
-    AuthModule
+    AuthModule,
+    EmployeesModule
   ],
   controllers: [AppController],
   providers: [AppService],
