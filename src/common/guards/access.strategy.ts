@@ -1,0 +1,27 @@
+import { UnauthorizedException } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { ExtractJwt, Strategy } from "passport-jwt";
+import { Request } from "express";
+
+export class AccessStrategy extends PassportStrategy(Strategy) {
+    constructor() {
+        super({
+            jwtFromRequest: ExtractJwt.fromExtractors([(req: Request) => {
+                if (req && req.cookies) {
+                    return req.cookies.access_token;
+                }
+                return null;
+            }]),
+            secretOrKey: `${process.env.JWT_SECRET}`,
+            ignoreExpiration: false,
+        });
+    }
+
+    validate(payload: any): any {
+        if (!payload) {
+            throw new UnauthorizedException('token is required');
+        }
+        return { sub: payload.sub, phone: payload.phone, role: payload.role };
+    }
+
+} 
