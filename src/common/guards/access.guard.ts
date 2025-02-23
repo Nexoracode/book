@@ -8,10 +8,10 @@ export class AccessGuard extends AuthGuard(StrategyModel.ACCESS_STRATEGY) {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
-    if (err || !user) {
+  handleRequest(err: any, employee: any, info: any) {
+    if (err || !employee) {
       throw new UnauthorizedException('token is missed');
     }
-    return user;
+    return employee;
   }
 }
