@@ -2,8 +2,9 @@ import { UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { Request } from "express";
+import { StrategyModel } from "./strategy.enum";
 
-export class AccessStrategy extends PassportStrategy(Strategy) {
+export class AccessStrategy extends PassportStrategy(Strategy, StrategyModel.ACCESS_STRATEGY) {
     constructor() {
         super({
             jwtFromRequest: ExtractJwt.fromExtractors([(req: Request) => {
