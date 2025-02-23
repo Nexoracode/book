@@ -1,23 +1,21 @@
-import { BadGatewayException, BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginAuthDto } from './dto/login-auth.dto';
-import { UserService } from '../user/user.service';
-import * as bcrypt from 'bcrypt';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { TokenType, UtilToken } from 'src/common/utils/token.util';
 import { UtilCookie } from 'src/common/utils/cookie.util';
 import { Response, Request } from 'express';
 import { Employees } from '../employees/entities/employee.entity';
 import { EmployeesService } from '../employees/employees.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(Employees)
     private authRepo: Repository<Employees>,
-    private readonly employeeService: EmployeesService,
+    private employeeService: EmployeesService,
     private tokenService: UtilToken,
     private cookieService: UtilCookie,
   ) { }

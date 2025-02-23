@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Res, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Res, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { Response, Request } from 'express';
+import { RefreshGuard } from 'src/common/guards/refresh.guard';
+import { AccessGuard } from 'src/common/guards/access.guard';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
@@ -20,6 +22,7 @@ export class AuthController {
 
 
   @Post('refresh')
+  @UseGuards(RefreshGuard)
   @HttpCode(HttpStatus.OK)
   authRefreshToken(@Req() req: Request, @Res() res: Response) {
     return this.authService.authRefreshToken(req, res);
