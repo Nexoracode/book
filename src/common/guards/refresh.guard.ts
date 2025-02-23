@@ -13,7 +13,6 @@ export class RefreshGuard extends AuthGuard(StrategyModel.REFRESH_STRATEGY) {
     if (!user || err) {
       throw new UnauthorizedException('token is missed');
     }
-    console.log(user);
     return user;
   }
 }
