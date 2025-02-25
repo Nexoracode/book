@@ -13,6 +13,16 @@ export class OrderController {
     return this.orderService.addToOrder(createOrderDto);
   }
 
+  @Get(':id')
+  async orderById(@Param('id') id: string) {
+    const order = await this.orderService.findOne(+id)
+    return {
+      message: 'get order successfully',
+      statusCode: 200,
+      data: order
+    }
+  }
+
   @Get()
   orderFindAll(@Paginate() query: PaginateQuery) {
     return this.orderService.findAllPaginate(query);
