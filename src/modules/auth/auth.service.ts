@@ -54,6 +54,7 @@ export class AuthService {
       await this.authRepo.save(employee);
       this.cookieService.setCookie(res, accessToken, TokenType.ACCESS);
       this.cookieService.setCookie(res, refreshToken, TokenType.REFRESH);
+      console.log(employee);
       const { password, api_token, role, ...result } = employee;
       res.json({
         message: 'login successfully',

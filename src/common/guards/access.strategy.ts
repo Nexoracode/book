@@ -9,6 +9,7 @@ export class AccessStrategy extends PassportStrategy(Strategy, StrategyModel.ACC
         super({
             jwtFromRequest: ExtractJwt.fromExtractors([(req: Request) => {
                 if (req && req.cookies) {
+                    console.log('req', req.cookies.access_token)
                     return req.cookies.access_token;
                 }
                 return null;
@@ -19,6 +20,7 @@ export class AccessStrategy extends PassportStrategy(Strategy, StrategyModel.ACC
     }
 
     validate(payload: any): unknown {
+        console.log('payload');
         if (!payload) {
             throw new UnauthorizedException('token is required');
         }

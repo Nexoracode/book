@@ -16,6 +16,9 @@ export class Invoice {
     @Column({ type: 'decimal' })
     amount: number;
 
+    @Column({ type: 'varchar', length: 100, name: 'card_pan' })
+    cardPan: string;
+
     @Column({ name: 'payment_method' })
     paymentMethod: string;
 

@@ -25,8 +25,8 @@ export class Order {
     @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
     status: OrderStatus
 
-    @OneToMany(() => Invoice, (invoice) => invoice.order)
-    invoice: Invoice[]
+    @OneToOne(() => Invoice, (invoice) => invoice.order)
+    invoice: Invoice
 
     @ManyToOne(() => Product,)
     @JoinColumn({ name: 'product_id' })

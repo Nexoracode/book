@@ -8,6 +8,7 @@ import { Product } from '../product/entities/product.entity';
 import { User } from '../user/entities/user.entity';
 import { Address } from './entities/address.entity';
 import { FilterOperator, FilterSuffix, Paginate, PaginateQuery, paginate, Paginated } from 'nestjs-paginate'
+import { timestamp } from 'rxjs';
 
 @Injectable()
 export class OrderService {
@@ -50,6 +51,34 @@ export class OrderService {
         createdAt: [FilterOperator.GTE, FilterOperator.LTE]
       }
     });
+  }
+
+  async orderReports() {
+    const orders = await this.orderRepo.find({ relations: ['user', 'address', 'invoice', 'product'] })
+    const today = new Date().toISOString().slice(0, 10);
+
+    const quantityToday = await this.orderRepo
+      .createQueryBuilder('order')
+      .where('DATE(order.createdAt) = :date', { date: today })
+      .getCount();
+
+    const orderQuantity = await this.orderRepo
+      .createQueryBuilder('order')
+      .where('status = :status', { status: OrderStatus.COMPLETED })
+      .getMany()
+
+    const totalAmount = await this.orderRepo
+      .createQueryBuilder('order')
+      .leftJoin('order.invoice', 'invoice')
+      .select(['order.id', 'invoice.amount'])
+      .where('invoice.amount IS NOT NULL')
+      .getCount()
+
+    console.log('quantity for today : ', quantityToday);
+    console.log('all quantity orders : ', orderQuantity.length);
+    console.log('total amount : ', totalAmount);
+
+    return orders;
   }
 
   async addToOrder(dto: CreateOrderDto) {

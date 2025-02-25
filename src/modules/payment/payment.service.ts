@@ -22,13 +22,14 @@ export class PaymentService {
   }
 
 
-  async addToInvoice(orderId: number, transactionId: number, paymentMethod: string) {
+  async addToInvoice(orderId: number, cardPan: string, transactionId: number, paymentMethod: string) {
     const order = await this.orderService.findOne(orderId);
     const amount = (+order.totalAmount + 40_000);
     const invoice = this.invoiceRepo.create({
       amount: amount,
       transactionId,
       paymentMethod,
+      cardPan,
       order,
     })
     await this.invoiceRepo.save(invoice);
@@ -65,15 +66,17 @@ export class PaymentService {
         Amount: amount,
         Authority: authority,
       })
-      if (response.status === 100) {
-        const newRole = await this.orderService.updateStatus(order.id, OrderStatus.COMPLETED);
-        await this.addToInvoice(order.id, response.refId, 'Zarinpal')
+      console.log(response);
+      if (response.status === 100 || response.status === 101) {
+        const cardPan = response['cardPan'];
+        await this.addToInvoice(order.id, cardPan, response.refId, 'Zarinpal')
+        const updateOrder = await this.orderService.updateStatus(order.id, OrderStatus.COMPLETED);
         const stock = product.stock - order.quantity;
         await this.productService.updateStock(product.id, stock);
         const { firstName, lastName, phone } = order.user;
         const fullName = `${firstName} ${lastName}`;
         this.smsService.sendSms(phone, fullName, response.refId.toString())
-        const { user, address, ...result } = newRole;
+        const { user, address, ...result } = updateOrder;
         return {
           message: 'پرداخت با موفیت انجام شد',
           statusCode: 200,
@@ -85,8 +88,9 @@ export class PaymentService {
         }
       }
     } catch (e) {
-      const newRole = await this.orderService.updateStatus(order.id, OrderStatus.FAIL_VERIFY);
-      const { user, address, ...result } = newRole;
+      console.log(e);
+      const updateOrder = await this.orderService.updateStatus(order.id, OrderStatus.FAIL_VERIFY);
+      const { user, address, ...result } = updateOrder;
       return {
         data: {
           date: new Date().toISOString(),
