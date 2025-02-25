@@ -36,10 +36,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         };
 
         this.logger.error(
-            `\n🔴 EXCEPTION ERROR :  \n
-            STATUS CODE -> ${errorObject.statusCode}
-            MESSAGE -> ${errorObject.message}
-            PATH -> ${errorObject.path}`,
+            `\n🔴 EXCEPTION ERROR :{
+    [ STATUS CODE ] : ${errorObject.statusCode}
+    [ MESSAGE ] : ${errorObject.message}
+    [ PATH ] : ${errorObject.path} \n }`,
         );
         response.status(status).json(errorObject);
     }
