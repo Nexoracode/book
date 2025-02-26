@@ -9,7 +9,6 @@ export class AccessStrategy extends PassportStrategy(Strategy, StrategyModel.ACC
         super({
             jwtFromRequest: ExtractJwt.fromExtractors([(req: Request) => {
                 if (req && req.cookies) {
-                    console.log('req', req.cookies.access_token)
                     return req.cookies.access_token;
                 }
                 return null;

@@ -54,31 +54,23 @@ export class OrderService {
   }
 
   async orderReports() {
-    const orders = await this.orderRepo.find({ relations: ['user', 'address', 'invoice', 'product'] })
     const today = new Date().toISOString().slice(0, 10);
 
-    const quantityToday = await this.orderRepo
+    const result = await this.orderRepo
       .createQueryBuilder('order')
-      .where('DATE(order.createdAt) = :date', { date: today })
-      .getCount();
+      .select([
+        'SUM(CASE WHEN order.status = :completed THEN 1 ELSE 0 END) AS totalCompletedOrders',
+        'SUM(CASE WHEN DATE(order.createdAt) = :today THEN 1 ELSE 0 END) AS totalOrdersToday',
+        'SUM(CASE WHEN order.status = :completed THEN order.totalAmount ELSE 0 END) AS totalAmount',
+        'SUM(CASE WHEN order.status = :completed AND DATE(order.createdAt) = :today THEN order.totalAmount ELSE 0 END) AS totalAmountToday',
+        'SUM(CASE WHEN order.status = :completed AND DATE(order.createdAt) = :today THEN order.quantity ELSE 0 END) AS totalQuantityToday',
+        'SUM(order.quantity) AS totalBooksSold'
+      ])
+      .setParameters({ today, completed: OrderStatus.COMPLETED })
+      .getRawOne();
 
-    const orderQuantity = await this.orderRepo
-      .createQueryBuilder('order')
-      .where('status = :status', { status: OrderStatus.COMPLETED })
-      .getMany()
-
-    const totalAmount = await this.orderRepo
-      .createQueryBuilder('order')
-      .leftJoin('order.invoice', 'invoice')
-      .select(['order.id', 'invoice.amount'])
-      .where('invoice.amount IS NOT NULL')
-      .getCount()
-
-    console.log('quantity for today : ', quantityToday);
-    console.log('all quantity orders : ', orderQuantity.length);
-    console.log('total amount : ', totalAmount);
-
-    return orders;
+    console.log(result);
+    return result;
   }
 
   async addToOrder(dto: CreateOrderDto) {
