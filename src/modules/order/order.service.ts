@@ -69,7 +69,6 @@ export class OrderService {
       .setParameters({ today, completed: OrderStatus.COMPLETED })
       .getRawOne();
 
-    console.log(result);
     return result;
   }
 

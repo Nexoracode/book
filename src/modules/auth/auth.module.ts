@@ -12,5 +12,6 @@ import { EmployeesModule } from '../employees/employees.module';
   imports: [JwtModule, EmployeesModule, TypeOrmModule.forFeature([Employees])],
   controllers: [AuthController],
   providers: [AuthService, UtilCookie, UtilToken],
+  exports: [AuthService],
 })
 export class AuthModule { }

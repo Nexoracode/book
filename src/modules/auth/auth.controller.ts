@@ -20,17 +20,15 @@ export class AuthController {
     return this.authService.authLogin(res, LoginAuthDto);
   }
 
-
-  @Post('refresh')
-  @UseGuards(RefreshGuard)
-  @HttpCode(HttpStatus.OK)
-  authRefreshToken(@Req() req: Request, @Res() res: Response) {
-    return this.authService.authRefreshToken(req, res);
-  }
-
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   authLogout(@Req() req: Request, @Res() res: Response) {
     return this.authService.authLogout(req, res);
+  }
+
+  @Post('authenticate')
+  @HttpCode(HttpStatus.OK)
+  currentEmployee(@Req() req: Request, @Res() res: Response) {
+    return this.authService.authLoginToken(req, res);
   }
 }

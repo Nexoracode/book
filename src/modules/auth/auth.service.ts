@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -19,6 +19,18 @@ export class AuthService {
     private tokenService: UtilToken,
     private cookieService: UtilCookie,
   ) { }
+
+  async validationEmployee(id: number) {
+    const employee = await this.authRepo.findOne({
+      where: { id }, select: [
+        'id', 'firstName', 'lastName', 'password', 'api_token', 'role',
+      ]
+    });
+    if (!employee) {
+      throw new NotFoundException('employee not found');
+    }
+    return employee;
+  }
 
   async authRegister(registerDto: RegisterAuthDto) {
     const employee = await this.employeeService.findPhoneOne(registerDto.phone!);
@@ -67,39 +79,6 @@ export class AuthService {
     }
   }
 
-  async authRefreshToken(req: Request, res: Response) {
-    try {
-      const token = req.cookies.refresh_token;
-      if (!token) {
-        throw new UnauthorizedException('token is missed');
-      }
-      const decode = this.tokenService.verifyToken(token, TokenType.REFRESH);
-      const employee = await this.employeeService.findOne(decode.sub);
-      const isMatch = await bcrypt.compare(token, employee.api_token!)
-      if (!isMatch) {
-        throw new UnauthorizedException('token is missed');
-      }
-      const payload = { sub: employee.id, phone: employee.phone, role: employee.role };
-      const accessToken = this.tokenService.generateToken(payload, TokenType.ACCESS);
-      const refreshToken = this.tokenService.generateToken(payload, TokenType.REFRESH);
-      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-      employee.api_token = hashedRefreshToken;
-      await this.authRepo.save(employee);
-      this.cookieService.setCookie(res, accessToken, TokenType.ACCESS);
-      this.cookieService.setCookie(res, refreshToken, TokenType.REFRESH);
-      const { password, api_token, role, ...result } = employee;
-      res.json({
-        message: 'refreshToken successfully',
-        statusCode: 200,
-        data: {
-          employee: result,
-        }
-      })
-    } catch (e) {
-      throw new UnauthorizedException(e.message);
-    }
-  }
-
   async authLogout(req: Request, res: Response) {
     try {
       const token = req.cookies.refresh_token;
@@ -126,10 +105,38 @@ export class AuthService {
     }
   }
 
-  // async authLoginToken(req: Request) {
-  //   try {
-
-  //   }
-  // }
+  async authLoginToken(req: Request, res: Response) {
+    try {
+      const token = req.cookies.refresh_token;
+      const decode = this.tokenService.verifyToken(token, TokenType.REFRESH);
+      let employee = await this.authRepo.findOne({
+        where: { id: decode.sub }, select: [
+          'id', 'api_token', 'phone', 'firstName', 'lastName', 'role'
+        ]
+      });
+      if (!employee) {
+        throw new NotFoundException('کاربری بااین مشخصات یافت نشد')
+      }
+      const payload = { sub: employee.id, phone: employee.phone, role: employee.role };
+      const accessToken = this.tokenService.generateToken(payload, TokenType.ACCESS);
+      const refreshToken = this.tokenService.generateToken(payload, TokenType.REFRESH);
+      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+      employee.api_token = hashedRefreshToken;
+      await this.authRepo.save(employee);
+      this.cookieService.setCookie(res, accessToken, TokenType.ACCESS);
+      this.cookieService.setCookie(res, refreshToken, TokenType.REFRESH);
+      const { password, api_token, role, ...result } = employee;
+      res.json({
+        message: 'authentication successfully',
+        statusCode: 200,
+        data: {
+          employee: result,
+        }
+      })
+    } catch (e) {
+      console.log(e);
+      throw new UnauthorizedException('شما اجازه دسترسی به این بخش را ندارید.')
+    }
+  }
 
 }
