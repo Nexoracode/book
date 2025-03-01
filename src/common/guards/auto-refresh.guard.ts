@@ -24,7 +24,7 @@ export class AutoRefreshGuard implements CanActivate {
     const accessToken = req.cookies.access_token;
     const refreshToken = req.cookies.refresh_token;
     if (!accessToken && !refreshToken) {
-      throw new UnauthorizedException('token is missed2')
+      return true;
     }
     try {
       this.tokenService.verifyToken(accessToken, TokenType.ACCESS);
