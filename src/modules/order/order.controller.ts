@@ -2,12 +2,8 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@n
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Paginate, PaginateQuery } from 'nestjs-paginate';
-import { AccessGuard } from 'src/common/guards/access.guard';
-import { RoleGuard } from 'src/common/guards/role.guard';
-import { UserRole } from '../employees/entities/employee.entity';
 
 @Controller('order')
-@UseGuards(AccessGuard, new RoleGuard(UserRole.ADMIN))
 export class OrderController {
   constructor(private readonly orderService: OrderService) { }
 
