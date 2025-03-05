@@ -12,7 +12,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe);
   // app.useGlobalFilters(new AllExceptionsFilter()),
   app.enableCors({
-    origin: ['https://bookshops.liara.run', 'http://localhost:3000'],
+    origin: ['*'],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   })
