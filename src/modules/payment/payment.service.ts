@@ -18,7 +18,7 @@ export class PaymentService {
     private smsService: SmsService,
     @InjectRepository(Invoice) private invoiceRepo: Repository<Invoice>
   ) {
-    this.zarinpal = ZarinpalCheckout.create(`${process.env.ZARINPAL}`, true);
+    this.zarinpal = ZarinpalCheckout.create(`${process.env.ZARINPAL}`, false);
   }
 
 
@@ -66,7 +66,6 @@ export class PaymentService {
         Amount: amount,
         Authority: authority,
       })
-      console.log(response);
       if (response.status === 100 || response.status === 101) {
         const cardPan = response['cardPan'];
         await this.addToInvoice(order.id, cardPan, response.refId, 'Zarinpal')

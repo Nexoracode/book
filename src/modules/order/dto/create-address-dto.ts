@@ -13,6 +13,5 @@ export class AddressDto {
     @IsNotEmpty()
     plaque: string;
 
-    @IsNotEmpty()
     postalCode: string;
 }
