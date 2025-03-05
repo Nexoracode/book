@@ -19,7 +19,6 @@ export class PaymentService {
     @InjectRepository(Invoice) private invoiceRepo: Repository<Invoice>
   ) {
     this.zarinpal = ZarinpalCheckout.create(`${process.env.ZARINPAL_MERCHANT_ID}`, false);
-    console.log(`${process.env.ZARINPAL_MERCHANT_ID}`)
   }
 
 
