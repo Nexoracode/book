@@ -88,12 +88,12 @@ export class OrderService {
       await this.userRepo.save(user);
     }
 
-    const amount = product.discount === null ? product.price : product.discount;
+    const amount = product.discount === null ? (product.price * dto.quantity) : (product.discount! * dto.quantity);
 
     const order = this.orderRepo.create({
       user,
       product,
-      totalAmount: amount,
+      totalAmount: amount! * dto.quantity,
       quantity: dto.quantity,
       status: OrderStatus.PENDING,
     });
