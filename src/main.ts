@@ -14,6 +14,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'https://bookshops.liara.run',
+      'https://shop.roohbakhshac.ir',
       'http://localhost:3000',
       'https://sep.shaparak.ir',
       'https://www.zarinpal.com'

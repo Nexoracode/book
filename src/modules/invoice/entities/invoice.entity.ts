@@ -10,7 +10,7 @@ export class Invoice {
     @JoinColumn({ name: 'order_id' })
     order: Order;
 
-    @Column({ name: 'transaction_id' })
+    @Column('bigint', { name: 'transaction_id' })
     transactionId: number;
 
     @Column({ type: 'decimal' })

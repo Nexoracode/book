@@ -24,7 +24,8 @@ export class PaymentService {
 
   async addToInvoice(orderId: number, cardPan: string, transactionId: number, paymentMethod: string) {
     const order = await this.orderService.findOne(orderId);
-    const amount = (+order.totalAmount + 40_000);
+    // const amount = (+order.totalAmount);
+    const amount = (+order.totalAmount + 59_000);
     const invoice = this.invoiceRepo.create({
       amount: amount,
       transactionId,
@@ -38,7 +39,8 @@ export class PaymentService {
 
   async paymentRequest(orderId: number, callbackUrl: string) {
     const order = await this.orderService.findOne(orderId);
-    const amount = (+order.totalAmount + 40_000);
+    // const amount = (+order.totalAmount);
+    const amount = (+order.totalAmount + 59_000);
     const response = await this.zarinpal.PaymentRequest({
       Amount: amount,
       CallbackURL: callbackUrl,
@@ -59,13 +61,15 @@ export class PaymentService {
 
   async verifyRequest(authority: string, orderId: number) {
     const order = await this.orderService.findOne(orderId);
-    const amount = (+order.totalAmount + 40_000);
+    // const amount = (+order.totalAmount);
+    const amount = (+order.totalAmount + 59_000);
     const product = await this.productService.finOne(order.product.id);
     try {
       const response = await this.zarinpal.PaymentVerification({
         Amount: amount,
         Authority: authority,
       })
+      console.log(response);
       if (response.status === 100 || response.status === 101) {
         const cardPan = response['cardPan'];
         await this.addToInvoice(order.id, cardPan, response.refId, 'Zarinpal')
