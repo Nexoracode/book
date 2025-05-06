@@ -17,6 +17,11 @@ export class ProductController {
     return this.productService.create(createProductDto);
   }
 
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.productService.finOne(+id);
+  }
+
   @Patch('stock/:id')
   updateStock(@Param('id') id: string, @Body('stock') stock: string) {
     return this.productService.updateStock(+id, +stock);

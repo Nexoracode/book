@@ -36,7 +36,7 @@ export class AutoRefreshGuard implements CanActivate {
         const employee = await this.authService.validationEmployee(decode.sub);
         const isMatch = await bcrypt.compare(refreshToken, employee.api_token!);
         if (!isMatch) {
-          throw new UnauthorizedException('token is not validate')
+          throw new UnauthorizedException('refresh token is not match');
         }
         const payload = { sub: employee.id, phone: employee.phone, role: employee.role }
         const newAccessToken = this.tokenService.generateToken(payload, TokenType.ACCESS);
@@ -44,7 +44,7 @@ export class AutoRefreshGuard implements CanActivate {
         req.cookies.access_token = newAccessToken;
         return true;
       } catch (e) {
-        throw new UnauthorizedException('شما اجازه دسترسی به این بخش را ندارید.');
+        throw new UnauthorizedException('refresh token is not valid');
       }
     }
   }

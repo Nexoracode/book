@@ -135,7 +135,7 @@ export class AuthService {
       })
     } catch (e) {
       console.log(e);
-      throw new UnauthorizedException('شما اجازه دسترسی به این بخش را ندارید.')
+      throw new UnauthorizedException('token is not validate');
     }
   }
 

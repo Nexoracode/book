@@ -93,7 +93,7 @@ export class OrderService {
     const order = this.orderRepo.create({
       user,
       product,
-      totalAmount: amount! * dto.quantity,
+      totalAmount: amount,
       quantity: dto.quantity,
       status: OrderStatus.PENDING,
     });

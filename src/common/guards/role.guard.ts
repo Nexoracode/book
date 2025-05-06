@@ -16,7 +16,7 @@ export class RoleGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<CustomRequest>();
     const employee = request.user;
     if (!employee || employee.role !== this.role) {
-      throw new ForbiddenException('شما اجازه دسترسی به این بخش را ندارید.');
+      throw new ForbiddenException('You do not have permission to access this resource.');
     }
     return true;
   }
