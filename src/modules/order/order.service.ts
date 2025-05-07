@@ -48,7 +48,8 @@ export class OrderService {
       searchableColumns: ['invoice.amount', 'user.phone', 'user.(firstName', 'user.lastName)', 'id'],
       filterableColumns: {
         status: [FilterOperator.EQ],
-        createdAt: [FilterOperator.GTE, FilterOperator.LTE]
+        createdAt: [FilterOperator.GTE, FilterOperator.LTE],
+        product_id: [FilterOperator.EQ],
       }
     });
   }
