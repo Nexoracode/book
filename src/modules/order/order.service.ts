@@ -61,11 +61,11 @@ export class OrderService {
       .createQueryBuilder('order')
       .select([
         'SUM(CASE WHEN order.status = :completed THEN 1 ELSE 0 END) AS totalCompletedOrders',
-        'SUM(CASE WHEN DATE(order.createdAt) = :today THEN 1 ELSE 0 END) AS totalOrdersToday',
+        'SUM(CASE WHEN DATE(order.createdAt) = :today AND order.status = :completed THEN 1 ELSE 0 END) AS totalOrdersToday',
         'SUM(CASE WHEN order.status = :completed THEN order.totalAmount ELSE 0 END) AS totalAmount',
         'SUM(CASE WHEN order.status = :completed AND DATE(order.createdAt) = :today THEN order.totalAmount ELSE 0 END) AS totalAmountToday',
         'SUM(CASE WHEN order.status = :completed AND DATE(order.createdAt) = :today THEN order.quantity ELSE 0 END) AS totalQuantityToday',
-        'SUM(order.quantity) AS totalBooksSold'
+        'SUM(CASE WHEN order.status = :completed THEN order.quantity ELSE 0 END) AS totalBooksSold '
       ])
       .setParameters({ today, completed: OrderStatus.COMPLETED })
       .getRawOne();
