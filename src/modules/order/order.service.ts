@@ -54,22 +54,30 @@ export class OrderService {
     });
   }
 
-  async orderReports() {
+  async orderReports(productId?: number) {
     const today = new Date().toISOString().slice(0, 10);
 
-    const result = await this.orderRepo
+    const query = this.orderRepo
       .createQueryBuilder('order')
       .select([
-        'SUM(CASE WHEN order.status = :completed THEN 1 ELSE 0 END) AS totalCompletedOrders',
-        'SUM(CASE WHEN DATE(order.createdAt) = :today AND order.status = :completed THEN 1 ELSE 0 END) AS totalOrdersToday',
-        'SUM(CASE WHEN order.status = :completed THEN order.totalAmount ELSE 0 END) AS totalAmount',
-        'SUM(CASE WHEN order.status = :completed AND DATE(order.createdAt) = :today THEN order.totalAmount ELSE 0 END) AS totalAmountToday',
-        'SUM(CASE WHEN order.status = :completed AND DATE(order.createdAt) = :today THEN order.quantity ELSE 0 END) AS totalQuantityToday',
-        'SUM(CASE WHEN order.status = :completed THEN order.quantity ELSE 0 END) AS totalBooksSold '
+        `SUM(CASE WHEN order.status = :completed OR order.status = :paymentAdmin THEN 1 ELSE 0 END) AS totalCompletedOrders`,
+        `SUM(CASE WHEN DATE(order.createdAt) = :today AND (order.status = :completed OR order.status = :paymentAdmin) THEN 1 ELSE 0 END) AS totalOrdersToday`,
+        `SUM(CASE WHEN order.status = :completed OR order.status = :paymentAdmin THEN order.totalAmount ELSE 0 END) AS totalAmount`,
+        `SUM(CASE WHEN (order.status = :completed OR order.status = :paymentAdmin) AND DATE(order.createdAt) = :today THEN order.totalAmount ELSE 0 END) AS totalAmountToday`,
+        `SUM(CASE WHEN (order.status = :completed OR order.status = :paymentAdmin) AND DATE(order.createdAt) = :today THEN order.quantity ELSE 0 END) AS totalQuantityToday`,
+        `SUM(CASE WHEN order.status = :completed OR order.status = :paymentAdmin THEN order.quantity ELSE 0 END) AS totalBooksSold`
       ])
-      .setParameters({ today, completed: OrderStatus.COMPLETED })
-      .getRawOne();
+      .setParameters({
+        today,
+        completed: OrderStatus.COMPLETED,
+        paymentAdmin: OrderStatus.ADMIN_PAYMENT,
+      });
 
+    if (productId) {
+      query.andWhere('order.product_id = :productId', { productId });
+    }
+
+    const result = await query.getRawOne();
     return result;
   }
 

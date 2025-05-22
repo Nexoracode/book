@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Paginate, PaginateQuery } from 'nestjs-paginate';
@@ -19,8 +19,8 @@ export class OrderController {
   }
 
   @Get('report')
-  orderReports() {
-    return this.orderService.orderReports();
+  orderReports(@Query('productId') productId: string) {
+    return this.orderService.orderReports(+productId);
   }
 
   @Get()
