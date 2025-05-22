@@ -14,4 +14,9 @@ export class PaymentController {
   verifyRequest(@Query('Authority') authority: string, @Query('orderId') orderId: string) {
     return this.paymentService.verifyRequest(authority, +orderId);
   }
+
+  @Post('without')
+  async paymentWithout(@Query('orderId') orderid: string) {
+    return this.paymentService.withoutPayment(+orderid);
+  }
 }

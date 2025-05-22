@@ -102,4 +102,25 @@ export class PaymentService {
       }
     }
   }
+
+  async withoutPayment(orderId: number) {
+    const order = await this.orderService.findOne(orderId);
+    const { firstName, lastName, phone } = order.user;
+    const fullName = `${firstName} ${lastName}`;
+    const product = await this.productService.finOne(order.product.id);
+    await this.addToInvoice(order.id, 'مدیریت', 123, 'خرید حضوری')
+    const updateOrder = await this.orderService.updateStatus(order.id, OrderStatus.ADMIN_PAYMENT);
+    const stock = product.stock - order.quantity;
+    await this.productService.updateStock(product.id, stock);
+    this.smsService.sendSms(phone, fullName, order.id.toString())
+    const { user, address, ...result } = updateOrder;
+    return {
+      message: 'خرید با موفقیت انجام شد',
+      statusCode: 200,
+      data: {
+        date: new Date().toISOString(),
+        order: result,
+      },
+    }
+  }
 }

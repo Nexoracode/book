@@ -19,7 +19,6 @@ export class AccessStrategy extends PassportStrategy(Strategy, StrategyModel.ACC
     }
 
     validate(payload: any): unknown {
-        console.log('payload');
         if (!payload) {
             throw new UnauthorizedException('token is required');
         }

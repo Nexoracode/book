@@ -108,7 +108,6 @@ export class AuthService {
   async authLoginToken(req: Request, res: Response) {
     try {
       const token = req.cookies.refresh_token;
-      console.log('ref', token);
       const decode = this.tokenService.verifyToken(token, TokenType.REFRESH);
       let employee = await this.authRepo.findOne({
         where: { id: decode.sub }, select: [
@@ -119,7 +118,6 @@ export class AuthService {
         throw new NotFoundException('کاربری بااین مشخصات یافت نشد')
       }
       const payload = { sub: employee.id, phone: employee.phone, role: employee.role };
-      console.log('pay', payload);
       const accessToken = this.tokenService.generateToken(payload, TokenType.ACCESS);
       const refreshToken = this.tokenService.generateToken(payload, TokenType.REFRESH);
       const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
@@ -128,7 +126,6 @@ export class AuthService {
       this.cookieService.setCookie(res, accessToken, TokenType.ACCESS);
       this.cookieService.setCookie(res, refreshToken, TokenType.REFRESH);
       const { password, api_token, role, ...result } = employee;
-      console.log('hash', hashedRefreshToken);
       res.json({
         message: 'authentication successfully',
         statusCode: 200,

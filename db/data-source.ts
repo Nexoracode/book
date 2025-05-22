@@ -3,19 +3,6 @@ import * as dotenv from "dotenv";
 const envFile = `.env.${process.env.NODE_ENV || "development"}`;
 dotenv.config({ path: envFile });
 import { DataSource, DataSourceOptions } from 'typeorm';
-// ConfigModule.forRoot();
-// export const dataSourceOption: DataSourceOptions = {
-//     type: 'mysql',
-//     host: "academy",
-//     port: 3306,
-//     username: "root",
-//     password: "CJJRGWDBxnSR6tAjPEevn0xs",
-//     database: "namaz-bahal",
-//     entities: ['dist/**/*.entity{.js,.ts}'],
-//     migrations: [__dirname + '/migrations/*.js'],
-//     logging: false,
-//     synchronize: false,
-// };
 
 export const dataSourceOption: DataSourceOptions = {
     type: 'mysql',
