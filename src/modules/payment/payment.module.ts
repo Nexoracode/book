@@ -7,9 +7,11 @@ import { OrderModule } from '../order/order.module';
 import { Invoice } from '../invoice/entities/invoice.entity';
 import { ProductModule } from '../product/product.module';
 import { SmsModule } from '../sms/sms.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
+    HttpModule,
     ProductModule,
     OrderModule,
     SmsModule,

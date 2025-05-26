@@ -4,9 +4,11 @@ import { OrderService } from '../order/order.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Invoice } from '../invoice/entities/invoice.entity';
 import { Repository } from 'typeorm';
-import { OrderStatus } from '../order/entities/order.entity';
+import { Order, OrderStatus } from '../order/entities/order.entity';
 import { ProductService } from '../product/product.service';
 import { SmsService } from '../sms/sms.service';
+import { lastValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class PaymentService {
@@ -16,9 +18,30 @@ export class PaymentService {
     private orderService: OrderService,
     private productService: ProductService,
     private smsService: SmsService,
-    @InjectRepository(Invoice) private invoiceRepo: Repository<Invoice>
+    private readonly httpService: HttpService,
+    @InjectRepository(Invoice)
+    private invoiceRepo: Repository<Invoice>
   ) {
     this.zarinpal = ZarinpalCheckout.create(`${process.env.ZARINPAL_MERCHANT_ID}`, false);
+  }
+
+  async callExternalApi(order: Order) {
+    const url = 'https://api.roohbakhshac.ir/api/site/kole/user/register';
+    try {
+      const response = await lastValueFrom(this.httpService.post(url, {
+        address: order.address.street,
+        city: order.address.city,
+        state: order.address.province,
+        postal: order.address.postalCode,
+        phone: order.user.phone,
+        fullname: order.user.firstName + ' ' + order.user.lastName,
+        paid: true,
+      }))
+      console.log('External API response:', response.status);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
 
@@ -80,6 +103,7 @@ export class PaymentService {
         const fullName = `${firstName} ${lastName}`;
         this.smsService.sendSms(phone, fullName, response.refId.toString())
         const { user, address, ...result } = updateOrder;
+        await this.callExternalApi(order);
         return {
           message: 'پرداخت با موفیت انجام شد',
           statusCode: 200,
@@ -114,6 +138,7 @@ export class PaymentService {
     await this.productService.updateStock(product.id, stock);
     this.smsService.sendSms(phone, fullName, order.id.toString())
     const { user, address, ...result } = updateOrder;
+    await this.callExternalApi(order);
     return {
       message: 'خرید با موفقیت انجام شد',
       statusCode: 200,
