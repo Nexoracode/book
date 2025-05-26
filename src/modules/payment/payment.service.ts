@@ -103,7 +103,9 @@ export class PaymentService {
         const fullName = `${firstName} ${lastName}`;
         this.smsService.sendSms(phone, fullName, response.refId.toString())
         const { user, address, ...result } = updateOrder;
-        await this.callExternalApi(order);
+        if (order.product.id === 2) {
+          await this.callExternalApi(order);
+        }
         return {
           message: 'پرداخت با موفیت انجام شد',
           statusCode: 200,
@@ -138,7 +140,9 @@ export class PaymentService {
     await this.productService.updateStock(product.id, stock);
     this.smsService.sendSms(phone, fullName, order.id.toString())
     const { user, address, ...result } = updateOrder;
-    await this.callExternalApi(order);
+    if (order.product.id === 2) {
+      await this.callExternalApi(order);
+    }
     return {
       message: 'خرید با موفقیت انجام شد',
       statusCode: 200,
