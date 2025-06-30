@@ -60,6 +60,14 @@ export class CreateProductDto {
     @IsNumber()
     isbn?: number;
 
+    @IsString()
+    @IsOptional()
+    urlVideo?: string;
+
+    @IsString()
+    @IsOptional()
+    thumbnail?: string;
+
     @IsOptional()
     @IsArray()
     @ArrayMaxSize(20)

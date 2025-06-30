@@ -25,7 +25,7 @@ export class PaymentService {
     private invoiceRepo: Repository<Invoice>,
     private readonly dataSource: DataSource,
   ) {
-    this.zarinpal = ZarinpalCheckout.create(`${process.env.ZARINPAL_MERCHANT_ID}`, true);
+    this.zarinpal = ZarinpalCheckout.create(`${process.env.ZARINPAL_MERCHANT_ID}`, false);
   }
 
   async callExternalApi(order: Order) {
@@ -45,22 +45,6 @@ export class PaymentService {
     } catch (error) {
       console.log(error);
     }
-  }
-
-
-  async addToInvoice(orderId: number, cardPan: string, transactionId: number, paymentMethod: string) {
-    const order = await this.orderService.findOne(orderId);
-    const product = await this.productService.finOne(order.product.id);
-    const amount = (+order.totalAmount + +product.postage);
-    const invoice = this.invoiceRepo.create({
-      amount: amount,
-      transactionId,
-      paymentMethod,
-      cardPan,
-      order,
-    })
-    await this.invoiceRepo.save(invoice);
-    return invoice;
   }
 
   async paymentRequest(orderId: number, callbackUrl: string) {
@@ -98,14 +82,6 @@ export class PaymentService {
         })
         if (response.status === 100 || response.status === 101) {
           const cardPan = response['cardPan'];
-          const createInvoice = manager.create(Invoice, {
-            order,
-            cardPan,
-            amount,
-            transactionId: response.refId,
-            paymentMethod: 'Zarinpal'
-          })
-          await manager.save(Invoice, createInvoice);
           const updateOrder = manager.merge(Order, order, {
             id: order.id,
             status: OrderStatus.COMPLETED
@@ -116,8 +92,21 @@ export class PaymentService {
           await manager.save(Product, product);
           const { firstName, lastName, phone } = order.user;
           const fullName = `${firstName} ${lastName}`;
+          const createInvoice = manager.create(Invoice, {
+            order,
+            cardPan,
+            amount,
+            transactionId: response.refId,
+            paymentMethod: 'Zarinpal'
+          })
+          manager.save(Invoice, createInvoice);
           this.smsService.sendSms(phone, fullName, response.refId.toString())
-          const { user, address, ...result } = updateOrder;
+          const finalOrder = await manager.findOne(Order, {
+            where: { id: order.id },
+            relations: ['product', 'invoice', 'user', 'address'],
+          });
+          if (!finalOrder) throw new Error('سفارش یافت نشد');
+          const { user, address, ...result } = finalOrder;
           if (order.product.id === 2) {
             await this.callExternalApi(order);
           }
@@ -160,14 +149,6 @@ export class PaymentService {
       const order = await this.orderService.findOne(orderId);
       const product = await this.productService.finOne(order.product.id);
       const amount = (+order.totalAmount + +product.postage);
-      const createInvoice = manager.create(Invoice, {
-        order,
-        amount: amount,
-        cardPan: 'مدیریت',
-        transactionId: 123,
-        paymentMethod: 'خرید حضوری'
-      })
-      await manager.save(Invoice, createInvoice);
       const updateOrder = manager.merge(Order, order, {
         id: order.id,
         status: OrderStatus.COMPLETED
@@ -178,8 +159,20 @@ export class PaymentService {
       await manager.save(Product, product);
       const { firstName, lastName, phone } = order.user;
       const fullName = `${firstName} ${lastName}`;
+      const createInvoice = manager.create(Invoice, {
+        order: { id: orderId },
+        amount: amount,
+        cardPan: 'مدیریت',
+        transactionId: 123,
+        paymentMethod: 'خرید حضوری'
+      })
+      await manager.save(Invoice, createInvoice);
       this.smsService.sendSms(phone, fullName, orderId.toString())
-      const { user, address, ...result } = updateOrder;
+      const finalOrder = await manager.findOne(Order, {
+        where: { id: order.id },
+        relations: ['product', 'invoice'],
+      });
+      if (!finalOrder) throw new Error('سفارش یافت نشد');
       if (order.product.id === 2) {
         await this.callExternalApi(order);
       }
@@ -188,7 +181,7 @@ export class PaymentService {
         statusCode: 200,
         data: {
           date: new Date().toISOString(),
-          order: result,
+          order: finalOrder,
         },
       }
     })

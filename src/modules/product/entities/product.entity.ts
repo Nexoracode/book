@@ -15,16 +15,16 @@ export class Product {
     @Column()
     stock: number;
 
-    @Column('decimal')
+    @Column('int')
     price: number;
 
-    @Column('decimal', { nullable: true })
-    discount?: number;
+    @Column('int', { nullable: true })
+    discount: number;
 
     @Column('text', { nullable: true })
     description2: string;
 
-    @Column('decimal')
+    @Column('int', { nullable: true })
     postage: number;
 
     @Column('varchar', { nullable: true })
@@ -37,7 +37,7 @@ export class Product {
     ageGroup?: string;
 
     @Column('int', { nullable: true })
-    pages?: number;
+    pages: number;
 
     @Column('varchar', { nullable: true })
     template?: string;
@@ -45,11 +45,17 @@ export class Product {
     @Column('varchar', { nullable: true })
     coverType?: string;
 
+    @Column({ name: 'url_video', nullable: true })
+    urlVideo: string;
+
+    @Column({ nullable: true })
+    thumbnail: string;
+
     @Column('int', { nullable: true })
-    weight?: number;
+    weight: number;
 
     @Column('bigint', { nullable: true })
-    isbn?: number;
+    isbn: number;
 
     @OneToMany(() => Media, media => media.product, { cascade: true })
     media: Media[];
