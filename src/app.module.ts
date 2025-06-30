@@ -11,6 +11,7 @@ import { InvoiceModule } from './modules/invoice/invoice.module';
 import { SmsModule } from './modules/sms/sms.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { EmployeesModule } from './modules/employees/employees.module';
+import { MediaModule } from './modules/media/media.module';
 
 ConfigModule.forRoot();
 @Module({
@@ -23,7 +24,8 @@ ConfigModule.forRoot();
     InvoiceModule,
     SmsModule,
     AuthModule,
-    EmployeesModule
+    EmployeesModule,
+    MediaModule
   ],
   controllers: [AppController],
   providers: [AppService],
