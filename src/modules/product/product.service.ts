@@ -41,7 +41,7 @@ export class ProductService {
     };
   }
 
-  async finOne(id: number) {
+  async findOne(id: number) {
     const product = await this.productRepo.findOne({ where: { id }, relations: ['media'] })
     if (!product) {
       throw new NotFoundException('product not found');
@@ -50,7 +50,7 @@ export class ProductService {
   }
 
   async updateStock(id: number, stock: number) {
-    let product = await this.finOne(id);
+    let product = await this.findOne(id);
     product.stock = stock;
     await this.productRepo.save(product);
     return {
@@ -62,7 +62,7 @@ export class ProductService {
 
   async update(id: number, dto: UpdateProductDto) {
     return runInTransaction(this.dataSource, async (manager) => {
-      const product = await this.finOne(id);
+      const product = await this.findOne(id);
       if (!product) throw new NotFoundException('محصول مورد نظر یافت نشد.');
 
       const duplicate = await this.productRepo.findOne({ where: { name: dto.name } });
@@ -96,7 +96,7 @@ export class ProductService {
 
   async remove(id: number) {
     return runInTransaction(this.dataSource, async (manager) => {
-      const product = await this.finOne(id);
+      const product = await this.findOne(id);
       if (!product) throw new NotFoundException('محصول مورد نظر یافت نشد.');
       await manager.remove(Product, product);
       await manager.update(Media, { id: In(product.media.map((m) => m.id)) }, { product: null })
