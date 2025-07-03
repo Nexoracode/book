@@ -3,7 +3,7 @@ import * as ZarinpalCheckout from 'zarinpal-checkout';
 import { OrderService } from '../order/order.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Invoice } from '../invoice/entities/invoice.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Order, OrderStatus } from '../order/entities/order.entity';
 import { ProductService } from '../product/product.service';
 import { SmsService } from '../sms/sms.service';
@@ -26,6 +26,19 @@ export class PaymentService {
     private readonly dataSource: DataSource,
   ) {
     this.zarinpal = ZarinpalCheckout.create(`${process.env.ZARINPAL_MERCHANT_ID}`, false);
+  }
+
+  private async updateProductStock(
+    manager: EntityManager,
+    product: Product,
+    quantity: number,
+    operation: 'increase' | 'decrease',
+  ) {
+    const updatedStock = operation === 'decrease'
+      ? product.stock - quantity
+      : product.stock + quantity;
+    manager.merge(Product, product, { stock: updatedStock });
+    await manager.save(Product, product);
   }
 
   async callExternalApi(order: Order) {
@@ -75,31 +88,47 @@ export class PaymentService {
       const order = await this.orderService.findOne(orderId);
       const product = await this.productService.finOne(order.product.id);
       const amount = (+order.totalAmount + +product.postage);
+
+      const existingInvoice = await manager.findOne(Invoice, { where: { order: { id: order.id } } });
+      if (existingInvoice) {
+        return {
+          message: 'فاکتور قبلاً ثبت شده است',
+          statusCode: 409,
+          data: existingInvoice,
+        };
+      }
+
       try {
         const response = await this.zarinpal.PaymentVerification({
           Amount: amount,
           Authority: authority,
         })
+        const duplicateTransaction = await manager.findOne(Invoice, { where: { transactionId: response.refId } });
+
+        if (duplicateTransaction) {
+          return {
+            message: 'تراکنش تکراری است',
+            statusCode: 409,
+            data: duplicateTransaction,
+          };
+        }
         if (response.status === 100 || response.status === 101) {
-          const cardPan = response['cardPan'];
           const updateOrder = manager.merge(Order, order, {
             id: order.id,
             status: OrderStatus.COMPLETED
           })
           await manager.save(Order, updateOrder);
-          const stock = product.stock - order.quantity;
-          manager.merge(Product, product, { stock })
-          await manager.save(Product, product);
+          await this.updateProductStock(manager, product, order.quantity, 'decrease');
           const { firstName, lastName, phone } = order.user;
           const fullName = `${firstName} ${lastName}`;
           const createInvoice = manager.create(Invoice, {
             order,
-            cardPan,
+            cardPan: response['cardPan'],
             amount,
             transactionId: response.refId,
             paymentMethod: 'Zarinpal'
           })
-          manager.save(Invoice, createInvoice);
+          await manager.save(Invoice, createInvoice);
           this.smsService.sendSms(phone, fullName, response.refId.toString())
           const finalOrder = await manager.findOne(Order, {
             where: { id: order.id },
@@ -121,26 +150,17 @@ export class PaymentService {
           }
         }
       } catch (e) {
-        console.log(e);
-        const updateOrder = manager.merge(Order, order, {
-          id: order.id,
-          status: OrderStatus.FAIL_VERIFY
-        })
-        await manager.save(Order, updateOrder);
-        const stock = product.stock + order.quantity;
-        manager.merge(Product, product, { stock })
-        const savedProduct = await manager.save(Product, product);
-        const { user, address, ...result } = updateOrder;
+        const failedOrder = manager.merge(Order, order, { id: order.id, status: OrderStatus.FAIL_VERIFY });
+        await manager.save(Order, failedOrder);
+        await this.updateProductStock(manager, product, order.quantity, 'increase');
+        const { address, user, ...result } = failedOrder;
         return {
           data: {
             date: new Date().toISOString(),
-            order: {
-              ...result,
-              product: savedProduct,
-            },
+            order: result,
           },
-        }
-      }
+        };
+      };
     })
   }
 
@@ -149,6 +169,15 @@ export class PaymentService {
       const order = await this.orderService.findOne(orderId);
       const product = await this.productService.finOne(order.product.id);
       const amount = (+order.totalAmount + +product.postage);
+      const existingInvoice = await manager.findOne(Invoice, { where: { order: { id: order.id } } });
+      if (existingInvoice) {
+        return {
+          message: 'فاکتور قبلاً ثبت شده است',
+          statusCode: 409,
+          data: existingInvoice,
+        };
+      }
+
       const updateOrder = manager.merge(Order, order, {
         id: order.id,
         status: OrderStatus.COMPLETED
