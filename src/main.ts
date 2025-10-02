@@ -18,7 +18,9 @@ async function bootstrap() {
       'https://shop.roohbakhshac.ir',
       'http://localhost:3000',
       'https://sep.shaparak.ir',
-      'https://www.zarinpal.com'
+      'https://www.zarinpal.com',
+      "https://app-react-web.roohbakhshac.com"
+
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
