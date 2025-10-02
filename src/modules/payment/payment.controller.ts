@@ -8,8 +8,6 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) { }
 
   @Post('pay')
-  @ApiProperty({ name: 'orderId', type: String })
-  @ApiProperty({ name: 'callback', type: String })
   paymentRequest(@Body() dto: PaymentPayDto) {
     return this.paymentService.paymentRequest(dto.orderId, dto.callBack);
   }
