@@ -73,7 +73,7 @@ export class PaymentService {
     if (!merchantId) {
       throw new Error('ZARINPAL_MERCHANT_ID is not defined in environment variables.');
     }
-    this.zarinpal = ZarinpalCheckout.create(merchantId, true);
+    this.zarinpal = ZarinpalCheckout.create(merchantId, false);
   }
 
   private async logSuspiciousTransaction(manager: EntityManager, context: {
