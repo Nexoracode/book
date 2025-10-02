@@ -31,7 +31,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggingInterceptor());
   const swaggerDocumentBuilder = new SwaggerDocumentBuilder(app);
   swaggerDocumentBuilder.setupSwagger();
-  await app.listen(process.env.PORT || 3002);
+  await app.listen(process.env.PORT || 3000);
 }
 
 bootstrap();
