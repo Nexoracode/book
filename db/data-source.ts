@@ -15,6 +15,7 @@ export const dataSourceOption: DataSourceOptions = {
     migrations: [__dirname + '/migrations/*.js'],
     logging: false,
     synchronize: process.env.NODE_ENV === 'development',
+    timezone: '+3:30'
 };
 
 const dataSource = new DataSource(dataSourceOption);

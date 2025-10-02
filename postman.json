@@ -1,0 +1,932 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "operationId": "AuthController_authRegister",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterAuthDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_authLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginAuthDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "AuthController_authLogout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/authenticate": {
+      "post": {
+        "operationId": "AuthController_currentEmployee",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/product/upload": {
+      "post": {
+        "operationId": "ProductController_uploadImages",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "List of Products",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadFilesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Product"
+        ]
+      }
+    },
+    "/api/product": {
+      "get": {
+        "operationId": "ProductController_productFind",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Product"
+        ]
+      },
+      "post": {
+        "operationId": "ProductController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Product"
+        ]
+      }
+    },
+    "/api/product/{id}": {
+      "get": {
+        "operationId": "ProductController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Product"
+        ]
+      },
+      "patch": {
+        "operationId": "ProductController_updateProduct",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Product"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductController_removeProduct",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Product"
+        ]
+      }
+    },
+    "/api/product/stock/{id}": {
+      "patch": {
+        "operationId": "ProductController_updateStock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Product"
+        ]
+      }
+    },
+    "/api/order/add": {
+      "post": {
+        "operationId": "OrderController_addToOrder",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Order"
+        ]
+      }
+    },
+    "/api/order/all": {
+      "get": {
+        "operationId": "OrderController_orderFindAllPage",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Order"
+        ]
+      }
+    },
+    "/api/order/report": {
+      "get": {
+        "operationId": "OrderController_orderReports",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Order"
+        ]
+      }
+    },
+    "/api/order": {
+      "get": {
+        "operationId": "OrderController_orderFindAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Order"
+        ]
+      }
+    },
+    "/api/order/{id}": {
+      "get": {
+        "operationId": "OrderController_orderById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Order"
+        ]
+      }
+    },
+    "/api/payment/pay": {
+      "post": {
+        "operationId": "PaymentController_paymentRequest",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentPayDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payment"
+        ]
+      }
+    },
+    "/api/payment/verify": {
+      "post": {
+        "operationId": "PaymentController_verifyRequest",
+        "parameters": [
+          {
+            "name": "Authority",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payment"
+        ]
+      }
+    },
+    "/api/payment/without": {
+      "post": {
+        "operationId": "PaymentController_paymentWithout",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payment"
+        ]
+      }
+    },
+    "/api/payment/excel": {
+      "post": {
+        "operationId": "PaymentController_uploadAndImport",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payment"
+        ]
+      }
+    },
+    "/api/sms/send": {
+      "post": {
+        "operationId": "SmsController_sendSms",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sms"
+        ]
+      }
+    },
+    "/api/user": {
+      "post": {
+        "operationId": "UserController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "User"
+        ]
+      },
+      "get": {
+        "operationId": "UserController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/user/{id}": {
+      "get": {
+        "operationId": "UserController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "User"
+        ]
+      },
+      "patch": {
+        "operationId": "UserController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "User"
+        ]
+      },
+      "delete": {
+        "operationId": "UserController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "User"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "RShop APi Document",
+    "description": "داکیومنت کامل جهت api ",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "RegisterAuthDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "phone": {
+            "type": "string",
+            "example": "securePassword123"
+          },
+          "password": {
+            "type": "string",
+            "example": "strongPassword123"
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "LoginAuthDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "example": "1234567890"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          }
+        },
+        "required": [
+          "phone",
+          "password"
+        ]
+      },
+      "UploadFilesDto": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        },
+        "required": [
+          "files"
+        ]
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Book Title"
+          },
+          "description": {
+            "type": "string",
+            "example": "This is a book about..."
+          },
+          "price": {
+            "type": "number",
+            "example": 280000
+          },
+          "discount": {
+            "type": "number",
+            "example": null,
+            "description": "Discount as a decimal (e.g., 0.1 for 10%)"
+          },
+          "stock": {
+            "type": "number",
+            "example": 100
+          },
+          "postage": {
+            "type": "number",
+            "example": 5
+          },
+          "description2": {
+            "type": "string",
+            "example": "Additional description or details about the book."
+          },
+          "author": {
+            "type": "string",
+            "example": "Fiction"
+          },
+          "publisher": {
+            "type": "string",
+            "example": "Fiction"
+          },
+          "genre": {
+            "type": "string",
+            "example": "Fiction"
+          },
+          "ageGroup": {
+            "type": "string",
+            "example": "Adult"
+          },
+          "pages": {
+            "type": "number",
+            "example": 300
+          },
+          "template": {
+            "type": "string",
+            "example": "Hardcover"
+          },
+          "coverType": {
+            "type": "string",
+            "example": "Hardcover"
+          },
+          "weight": {
+            "type": "number",
+            "example": 1.5,
+            "description": "Weight in kilograms"
+          },
+          "isbn": {
+            "type": "number",
+            "example": 9783161484100
+          },
+          "urlVideo": {
+            "type": "string",
+            "example": "http://example.com/video"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "http://example.com/thumbnail.jpg"
+          },
+          "mediaIds": {
+            "example": [
+              1,
+              2,
+              3
+            ],
+            "description": "Array of media IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "price",
+          "stock",
+          "postage",
+          "author",
+          "publisher",
+          "genre",
+          "ageGroup",
+          "pages",
+          "template",
+          "coverType",
+          "weight",
+          "isbn"
+        ]
+      },
+      "UpdateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Book Title"
+          },
+          "description": {
+            "type": "string",
+            "example": "This is a book about..."
+          },
+          "price": {
+            "type": "number",
+            "example": 280000
+          },
+          "discount": {
+            "type": "number",
+            "example": null,
+            "description": "Discount as a decimal (e.g., 0.1 for 10%)"
+          },
+          "stock": {
+            "type": "number",
+            "example": 100
+          },
+          "postage": {
+            "type": "number",
+            "example": 5
+          },
+          "description2": {
+            "type": "string",
+            "example": "Additional description or details about the book."
+          },
+          "author": {
+            "type": "string",
+            "example": "Fiction"
+          },
+          "publisher": {
+            "type": "string",
+            "example": "Fiction"
+          },
+          "genre": {
+            "type": "string",
+            "example": "Fiction"
+          },
+          "ageGroup": {
+            "type": "string",
+            "example": "Adult"
+          },
+          "pages": {
+            "type": "number",
+            "example": 300
+          },
+          "template": {
+            "type": "string",
+            "example": "Hardcover"
+          },
+          "coverType": {
+            "type": "string",
+            "example": "Hardcover"
+          },
+          "weight": {
+            "type": "number",
+            "example": 1.5,
+            "description": "Weight in kilograms"
+          },
+          "isbn": {
+            "type": "number",
+            "example": 9783161484100
+          },
+          "urlVideo": {
+            "type": "string",
+            "example": "http://example.com/video"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "http://example.com/thumbnail.jpg"
+          },
+          "mediaIds": {
+            "example": [
+              1,
+              2,
+              3
+            ],
+            "description": "Array of media IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateOrderDto": {
+        "type": "object",
+        "properties": {
+          "province": {
+            "type": "string",
+            "example": "خراسان شمالی"
+          },
+          "city": {
+            "type": "string",
+            "example": "بجنورد"
+          },
+          "street": {
+            "type": "string",
+            "example": "بلوار معلم"
+          },
+          "plaque": {
+            "type": "string",
+            "example": "12"
+          },
+          "postalCode": {
+            "type": "string",
+            "example": "1234567890"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "رضا"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "محمدی"
+          },
+          "phone": {
+            "type": "string",
+            "example": "09123456789"
+          },
+          "productId": {
+            "type": "number",
+            "example": 1
+          },
+          "quantity": {
+            "type": "number",
+            "example": 2
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "productId",
+          "quantity"
+        ]
+      },
+      "PaymentPayDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "number",
+            "example": 1,
+            "description": "order ID"
+          },
+          "callBack": {
+            "type": "string",
+            "example": "http://localhost:3000?orderId=822",
+            "description": "callback url"
+          }
+        },
+        "required": [
+          "orderId",
+          "callBack"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "phone": {
+            "type": "string",
+            "example": "securePassword123"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  }
+}

@@ -1,12 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn, Unique, OneToOne } from 'typeorm';
 import { Order } from '../../order/entities/order.entity';
 
 @Entity()
+@Unique(['order'])
 export class Invoice {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => Order, { onDelete: 'CASCADE' })
+    @OneToOne(() => Order, { onDelete: 'CASCADE', nullable: false })
     @JoinColumn({ name: 'order_id' })
     order: Order;
 

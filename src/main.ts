@@ -5,6 +5,7 @@ import { AllExceptionsFilter } from './common/filters/exception';
 import * as cookieParser from 'cookie-parser';
 import { LoggingInterceptor } from './common/logging/logging.interceptor';
 import helmet from 'helmet';
+import { SwaggerDocumentBuilder } from './swagger/swagger-document-builder';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,7 +27,10 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.use(helmet());
   app.useGlobalInterceptors(new LoggingInterceptor());
-  await app.listen(process.env.PORT || 3000);
+  const swaggerDocumentBuilder = new SwaggerDocumentBuilder(app);
+  swaggerDocumentBuilder.setupSwagger();
+  await app.listen(process.env.PORT || 3002);
 }
 
 bootstrap();
+

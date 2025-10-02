@@ -11,6 +11,8 @@ import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { runInTransaction } from 'src/common/helpers/transaction'; // Assuming this helper is correctly implemented
 import { Product } from '../product/entities/product.entity';
+import * as xlsx from 'xlsx';
+import { SuspiciousTransaction } from '../suspicios/entities/supicious.entity';
 
 // Define constants for Zarinpal statuses and magic numbers
 enum ZarinpalStatus {
@@ -47,27 +49,6 @@ function getZarinpalErrorMessage(statusCode: number): string {
     case ZarinpalStatus.INTERNAL_ERROR: return 'خطای داخلی در سیستم زرین‌پال رخ داده است.';
     case ZarinpalStatus.PAYMENT_FAILED_GENERIC: return 'پرداخت ناموفق.';
     case ZarinpalStatus.SESSION_MISMATCH: return 'سشن با مرچنت کد همخوانی ندارد.';
-    case -1: return 'اطلاعات ارسال شده ناقص است.';
-    case -2: return 'IP و یا مرچنت کد پذیرنده صحیح نیست.';
-    case -3: return 'با توجه به محدودیت های شاپرک امکان پرداخت با رقم درخواستی میسر نیست.';
-    case -4: return 'مرچنت کد نامعتبر است.';
-    case -9: return 'خطای اعتبار سنجی.';
-    case -10: return 'مبلغ درخواستی نامعتبر است.';
-    case -11: return 'شماره کارت نامعتبر است.';
-    case -12: return 'شماره حساب نامعتبر است.';
-    case -15: return 'تراکنش قبلا برگشت خورده است.';
-    case -19: return 'پرداخت ناموفق.';
-    case -22: return 'تراکنش ناموفق.';
-    case -23: return 'تراکنش نامعتبر است.';
-    case -24: return 'تراکنش یافت نشد.';
-    case -25: return 'مبلغ پرداخت شده کمتر از حداقل مجاز است.';
-    case -26: return 'مبلغ پرداخت شده بیشتر از حداکثر مجاز است.';
-    case -27: return 'تراکنش منقضی شده است.';
-    case -28: return 'تراکنش قبلاً انجام شده است.';
-    case -29: return 'تراکنش تایید نشده است.';
-    case -30: return 'تراکنش برگشت داده شده است.';
-    case -31: return 'تراکنش لغو شده است.';
-    // ... you can add more cases based on the full Zarinpal error list
     default: return `خطای نامشخص از درگاه پرداخت. کد خطا: ${statusCode}`;
   }
 }
@@ -92,7 +73,29 @@ export class PaymentService {
     if (!merchantId) {
       throw new Error('ZARINPAL_MERCHANT_ID is not defined in environment variables.');
     }
-    this.zarinpal = ZarinpalCheckout.create(merchantId, false);
+    this.zarinpal = ZarinpalCheckout.create(merchantId, true);
+  }
+
+  private async logSuspiciousTransaction(manager: EntityManager, context: {
+    orderId: number,
+    transactionId?: string,
+    amount?: number,
+    paymentMethod?: string,
+    statusMessage?: string,
+    rawResponse?: any,
+    errorCode?: string,
+    authority: string;
+  }) {
+    const record = new SuspiciousTransaction();
+    record.order = { id: context.orderId } as Order;
+    record.transactionId = context.transactionId || 'UNKNOWN';
+    record.amount = context.amount || 0;
+    record.paymentMethod = context.paymentMethod || 'UNKNOWN';
+    record.statusMessage = context.statusMessage || 'UNKNOWN';
+    record.rawResponse = context.rawResponse || null;
+    record.errorCode = context.errorCode || 'UNKNOWN';
+    record.authority = context.authority;
+    await manager.save(SuspiciousTransaction, record);
   }
 
   private async updateProductStock(
@@ -251,68 +254,48 @@ export class PaymentService {
     amount: number,
     paymentDetails: { cardPan: string; transactionId: number; paymentMethod: string },
   ) {
-    // This check is important to prevent creating duplicate invoices if _completePaymentAndOrder is called directly
     const existingInvoice = await manager.findOne(Invoice, { where: { order: { id: order.id } } });
     if (existingInvoice) {
-      return {
-        message: 'فاکتور قبلاً ثبت شده است.',
-        statusCode: 409,
-        error: 'INVOICE_ALREADY_EXISTS',
-        data: { date: new Date().toISOString(), invoice: existingInvoice, order: order },
-      };
+      return { message: 'فاکتور قبلاً ثبت شده است.', statusCode: 409, data: existingInvoice };
     }
 
-    const updateOrder = manager.merge(Order, order, {
-      id: order.id,
-      status: OrderStatus.COMPLETED,
-    });
+    const updateOrder = manager.merge(Order, order, { id: order.id, status: OrderStatus.COMPLETED });
     await manager.save(Order, updateOrder);
+
+    const verifiedOrder = await manager.findOne(Order, { where: { id: order.id }, relations: ['product', 'user'] });
+    if (verifiedOrder?.status !== OrderStatus.COMPLETED) {
+      throw new InternalServerErrorException('ثبت وضعیت سفارش به Completed ناموفق بود.');
+    }
 
     await this.updateProductStock(manager, product, order.quantity, 'decrease');
 
-    const { firstName, lastName, phone } = order.user;
-    const fullName = `${firstName} ${lastName}`;
-    const createInvoice = manager.create(Invoice, {
+    const invoice = manager.create(Invoice, {
       order,
       cardPan: paymentDetails.cardPan,
       amount,
       transactionId: paymentDetails.transactionId,
       paymentMethod: paymentDetails.paymentMethod,
     });
-    await manager.save(Invoice, createInvoice);
-
-    try {
-      this.smsService.sendSms(phone, fullName, paymentDetails.transactionId.toString());
-    } catch (smsError) {
-      console.error(`Failed to send SMS for order ${order.id}:`, smsError.message);
-      // Not re-throwing, just logging. SMS failure shouldn't fail the entire transaction.
-    }
-
-    const finalOrder = await manager.findOne(Order, {
-      where: { id: order.id },
-      relations: ['product', 'invoice', 'user', 'address'],
-    });
-    if (!finalOrder) {
-      return {
-        message: 'خطای داخلی: سفارش پس از تکمیل یافت نشد.',
-        statusCode: 500,
-        error: 'FINAL_ORDER_NOT_FOUND',
-        data: { date: new Date().toISOString(), order: { ...order, status: OrderStatus.COMPLETED } },
-      };
-    }
+    await manager.save(Invoice, invoice);
 
     if (order.product.id === SPECIAL_PRODUCT_ID_FOR_EXTERNAL_API) {
       await this.callExternalApi(order);
     }
 
-    const { user, address, ...result } = finalOrder;
+    try {
+      const { firstName, lastName, phone } = order.user;
+      this.smsService.sendSms(phone, `${firstName} ${lastName}`, paymentDetails.transactionId.toString());
+    } catch (e) {
+      console.error(`Failed to send SMS for order ${order.id}:`, e.message);
+    }
+
     return {
       message: 'پرداخت با موفقیت انجام شد',
       statusCode: 200,
       data: {
-        date: new Date().toISOString(),
+        date: new Date(),
         payment: paymentDetails,
-        order: result,
+        order: verifiedOrder,
       },
     };
   }
@@ -320,216 +303,127 @@ export class PaymentService {
   async verifyRequest(authority: string, orderId: number) {
     return runInTransaction(this.dataSource, async (manager) => {
       const order = await this.orderService.findOne(orderId);
-      if (!order) {
-        return {
-          message: 'سفارش یافت نشد.',
-          statusCode: 404,
-          error: 'ORDER_NOT_FOUND',
-          data: { date: new Date().toISOString(), order: null },
-        };
+      if (!order || order.status === OrderStatus.COMPLETED) {
+        const existingInvoice = await manager.findOne(Invoice, { where: { order: { id: order?.id } } });
+        return { message: 'سفارش شما قبلا تکمیل شده است.', statusCode: 409, data: existingInvoice || order };
       }
-
-      // --- CRITICAL FIX: Early exit if order is already COMPLETED ---
-      if (order.status === OrderStatus.COMPLETED) {
-        // Attempt to find the existing invoice to return it
-        const existingInvoice = await manager.findOne(Invoice, { where: { order: { id: order.id } } });
-        return {
-          message: 'این سفارش قبلاً با موفقیت تکمیل شده است.',
-          statusCode: 200, // Success, as the order is already in the desired state
-          error: 'ORDER_ALREADY_COMPLETED',
-          data: {
-            date: new Date().toISOString(),
-            order: order, // Return the existing completed order
-            invoice: existingInvoice || null, // Include existing invoice if found
-            // No Zarinpal payment details here as we didn't re-verify
-          },
-        };
-      }
-      // --- END CRITICAL FIX ---
-
 
       const product = await this.productService.findOne(order.product.id);
-      if (!product) {
-        return {
-          message: 'محصول مرتبط با سفارش یافت نشد.',
-          statusCode: 404,
-          error: 'PRODUCT_NOT_FOUND',
-          data: { date: new Date().toISOString(), order: order },
-        };
-      }
-
       const amount = parseFloat(order.totalAmount.toString()) + parseFloat(product.postage.toString());
-
       try {
-        const response = await this.zarinpal.PaymentVerification({
-          Amount: amount,
-          Authority: authority,
-        });
+        const response = await this.zarinpal.PaymentVerification({ Amount: amount, Authority: authority });
 
-        // --- Handle Zarinpal's own status codes FIRST ---
-        if (response.status === ZarinpalStatus.SUCCESS || response.status === ZarinpalStatus.SUCCESS_SETTLED) {
-          // Payment was successful. Proceed with completion logic.
-          const zarinpalRefId = Number(response.refId); // refId should be present for success
-
-          // Check for duplicate transaction ID (important!)
-          const duplicateTransaction = await manager.findOne(Invoice, { where: { transactionId: zarinpalRefId } });
+        if ([ZarinpalStatus.SUCCESS, ZarinpalStatus.SUCCESS_SETTLED].includes(response.status)) {
+          const duplicateTransaction = await manager.findOne(Invoice, { where: { transactionId: Number(response.refId) } });
           if (duplicateTransaction) {
-            // This is a duplicate verification for a payment that was already processed and invoiced.
-            // This scenario should ideally be caught by the `order.status === OrderStatus.COMPLETED` check above,
-            // but this provides an additional layer of safety for invoice duplication.
-            return {
-              message: 'تراکنش تکراری است. این پرداخت قبلاً ثبت شده است.',
-              statusCode: 409,
-              error: 'DUPLICATE_TRANSACTION_ID',
-              data: { date: new Date().toISOString(), invoice: duplicateTransaction, order: order },
-            };
+            return { message: 'تراکنش تکراری است.', statusCode: 409, data: duplicateTransaction };
           }
 
-          // Proceed to complete the order
           return await this._completePaymentAndOrder(manager, order, product, amount, {
             cardPan: response['cardPan'],
-            transactionId: zarinpalRefId,
+            transactionId: Number(response.refId),
             paymentMethod: 'Zarinpal',
           });
-
         } else {
-          // Zarinpal returned a non-success status. This is a Zarinpal business error.
-          const failedOrder = manager.merge(Order, order, { id: order.id, status: OrderStatus.FAIL_VERIFY });
-          await manager.save(Order, failedOrder);
-          await this.updateProductStock(manager, product, order.quantity, 'increase'); // Revert stock
+          await this.logSuspiciousTransaction(manager, {
+            orderId: order.id,
+            transactionId: response.refId?.toString(),
+            amount,
+            paymentMethod: 'Zarinpal',
+            statusMessage: `Verification failed: ${getZarinpalErrorMessage(response.status)}`,
+            rawResponse: response,
+            errorCode: `ZARINPAL_VERIFICATION_FAILED_${response.status}`,
+            authority,
+          });
+        }
+        const failedOrder = manager.merge(Order, order, { id: order.id, status: OrderStatus.FAIL_VERIFY });
+        await manager.save(Order, failedOrder);
+        await this.updateProductStock(manager, product, order.quantity, 'increase');
 
-          const errorMessage = getZarinpalErrorMessage(response.status);
-          const { user, address, ...result } = failedOrder;
-          return {
-            message: `تایید پرداخت ناموفق: ${errorMessage}`,
-            statusCode: 400, // Bad Request, as it's a Zarinpal-specific issue
-            error: `ZARINPAL_VERIFICATION_FAILED_${response.status}`,
-            data: {
-              date: new Date().toISOString(),
-              order: result,
-              zarinpalResponse: response, // Include Zarinpal's raw response
-            },
-          };
-        }
-      } catch (e: any) { // Use 'any' to safely access error properties
-        console.error(`Error during Zarinpal PaymentVerification for order ${orderId}:`, e);
-
-        let zarinpalErrorStatus: number | null = null;
-
-        // Attempt 1: Check if the error object itself has a 'status' property
-        if (typeof e.status === 'number' && e.status < 0) {
-          zarinpalErrorStatus = e.status;
-        }
-        // Attempt 2: Check if it's an Axios-like error with a response status
-        else if (e.response && typeof e.response.status === 'number' && e.response.status < 0) {
-          zarinpalErrorStatus = e.response.status;
-        }
-        // Attempt 3: Check for the specific 'errors.code' structure
-        else if (e.errors && typeof e.errors.code === 'number' && e.errors.code < 0) {
-          zarinpalErrorStatus = e.errors.code;
-        }
-        // Attempt 4: Try to parse from the error message string (e.g., "-22: Payment Failed")
-        else if (typeof e.message === 'string') {
-          const match = e.message.match(/^(-?\d+):/);
-          if (match && match[1]) {
-            const parsedStatus = parseInt(match[1], 10);
-            if (parsedStatus < 0) { // Only consider negative status codes as Zarinpal errors
-              zarinpalErrorStatus = parsedStatus;
-            }
-          }
-        }
-
-        // --- Ensure order status is updated to FAIL_VERIFY and stock is reverted if not already ---
-        const currentOrder = await manager.findOne(Order, { where: { id: order.id } });
-        if (currentOrder && currentOrder.status !== OrderStatus.FAIL_VERIFY && currentOrder.status !== OrderStatus.COMPLETED) {
-          const failedOrder = manager.merge(Order, currentOrder, { id: order.id, status: OrderStatus.FAIL_VERIFY });
-          await manager.save(Order, failedOrder);
-          await this.updateProductStock(manager, product, order.quantity, 'increase');
-        }
-        // --- END Ensure ---
-
-        if (typeof zarinpalErrorStatus === 'number' && zarinpalErrorStatus < 0) {
-          // It's a Zarinpal-specific error that was thrown
-          const errorMessage = getZarinpalErrorMessage(zarinpalErrorStatus);
-          const { user, address, ...result } = (currentOrder || order); // Use currentOrder if available
-          return {
-            message: `تایید پرداخت ناموفق: ${errorMessage}`,
-            statusCode: 400, // Bad Request for Zarinpal-specific errors
-            error: `ZARINPAL_VERIFICATION_FAILED_THROWN_${zarinpalErrorStatus}`, // Indicate it was a thrown error
-            data: {
-              date: new Date().toISOString(),
-              order: result,
-              zarinpalError: e, // Include the raw error object for debugging
-            },
-          };
-        } else {
-          // This is a truly unexpected error (network, database, etc.)
-          const { user, address, ...result } = (currentOrder || order);
-          return {
-            message: 'خطای سیستمی در تایید پرداخت رخ داد. لطفاً با پشتیبانی تماس بگیرید.',
-            statusCode: 500,
-            error: 'INTERNAL_VERIFICATION_ERROR',
-            data: {
-              date: new Date().toISOString(),
-              order: result,
-              detailedError: e.message || 'Unknown error',
-            },
-          };
-        }
+        return { message: 'پرداخت ناموفق بود.', statusCode: 400, data: { order: failedOrder } };
       }
-    });
+      catch (e: any) {
+        await this.logSuspiciousTransaction(manager, {
+          orderId: order.id,
+          transactionId: e?.response?.refId?.toString() || null,
+          amount,
+          paymentMethod: 'Zarinpal',
+          statusMessage: e?.message || 'Error during verification',
+          rawResponse: e?.response || e?.message || null,
+          errorCode: 'ZARINPAL_THROWN_ERR',
+          authority,
+        });
+      }
+
+      const failedOrder = manager.merge(Order, order, { id: order.id, status: OrderStatus.FAIL_VERIFY });
+      await manager.save(Order, failedOrder);
+      await this.updateProductStock(manager, product, order.quantity, 'increase');
+
+      return { message: 'خطا در تایید پرداخت.', statusCode: 500, data: { order: failedOrder } };
+    })
   }
 
   async withoutPayment(orderId: number) {
     return runInTransaction(this.dataSource, async (manager) => {
       const order = await this.orderService.findOne(orderId);
-      if (!order) {
-        return {
-          message: 'سفارش یافت نشد.',
-          statusCode: 404,
-          error: 'ORDER_NOT_FOUND',
-          data: { date: new Date().toISOString(), order: null },
-        };
-      }
-
       const product = await this.productService.findOne(order.product.id);
-      if (!product) {
-        return {
-          message: 'محصول مرتبط با سفارش یافت نشد.',
-          statusCode: 404,
-          error: 'PRODUCT_NOT_FOUND',
-          data: { date: new Date().toISOString(), order: order },
-        };
-      }
-
       const amount = parseFloat(order.totalAmount.toString()) + parseFloat(product.postage.toString());
 
-      // Generate a shorter, unique-enough numeric transaction ID for offline payments
-      // Combines order.id with the last 3 digits of the current timestamp.
-      // This reduces the length significantly while maintaining uniqueness for a given order ID.
-      // Note: Ensure order.id is not excessively large to prevent overflow if the database field is small.
       const transactionId = order.id * 1000 + (Date.now() % 1000);
 
-      // If the order was already completed, handle gracefully
       if (order.status === OrderStatus.COMPLETED) {
         const existingInvoice = await manager.findOne(Invoice, { where: { order: { id: order.id } } });
-        return {
-          message: 'این سفارش قبلاً با موفقیت تکمیل شده است.',
-          statusCode: 200, // Or 409 Conflict
-          error: 'ORDER_ALREADY_COMPLETED',
-          data: {
-            date: new Date().toISOString(),
-            order: order,
-            invoice: existingInvoice // Return existing invoice if found
-          },
-        };
+        return { message: 'سفارش قبلاً تکمیل شده است.', statusCode: 409, data: existingInvoice };
       }
 
       return await this._completePaymentAndOrder(manager, order, product, amount, {
         cardPan: 'مدیریت',
-        transactionId: transactionId,
+        transactionId,
         paymentMethod: 'خرید حضوری',
       });
     });
+  }
+
+
+  async importFromExcel(filePath: string, productId: number) {
+    return runInTransaction(this.dataSource, async (manager) => {
+      const product = await manager.findOne(Product, { where: { id: productId } })
+      if (!product) throw new NotFoundException('product not found');
+      console.log(product);
+      const workbook = xlsx.readFile(filePath);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = xlsx.utils.sheet_to_json(sheet);
+      type ExcelRow = {
+        firstName: string;
+        lastName: string;
+        phone: string;
+        state: string;
+        city: string;
+        fullAddress: string;
+        postalCode: string;
+        plaque: string;
+        [key: string]: any;
+      };
+      for (const row of rows as ExcelRow[]) {
+        const { firstName, lastName, phone, state, city, fullAddress, postalCode, plaque } = row;
+        const order = await this.orderService.addToOrder({
+          productId: product.id,
+          firstName,
+          lastName,
+          phone,
+          quantity: 1,
+          province: state,
+          city,
+          street: fullAddress,
+          plaque,
+          postalCode
+        })
+        await this.withoutPayment(order.id);
+      }
+      return {
+        statusCode: 200,
+        message: 'تمام اطلاعات با موفقیت ثبت شد',
+      }
+    })
   }
 }

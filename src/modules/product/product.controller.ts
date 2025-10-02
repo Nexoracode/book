@@ -4,6 +4,8 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { MediaService } from '../media/media.service';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger'
+import { UploadFilesDto } from './dto/update-proudct.dto';
 
 @Controller('product')
 export class ProductController {
@@ -14,6 +16,11 @@ export class ProductController {
 
   @Post('upload')
   @UseInterceptors(FilesInterceptor('files', 10))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'List of Products',
+    type: UploadFilesDto,
+  })
   uploadImages(@UploadedFiles() files: Express.Multer.File[]) {
     return this.mediaService.uploadFile(files);
   }
