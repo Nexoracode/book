@@ -352,16 +352,6 @@
       "post": {
         "operationId": "PaymentController_paymentRequest",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PaymentPayDto"
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": ""
@@ -880,25 +870,6 @@
           "phone",
           "productId",
           "quantity"
-        ]
-      },
-      "PaymentPayDto": {
-        "type": "object",
-        "properties": {
-          "orderId": {
-            "type": "number",
-            "example": 1,
-            "description": "order ID"
-          },
-          "callBack": {
-            "type": "string",
-            "example": "http://localhost:3000?orderId=822",
-            "description": "callback url"
-          }
-        },
-        "required": [
-          "orderId",
-          "callBack"
         ]
       },
       "CreateUserDto": {
