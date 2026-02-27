@@ -116,15 +116,15 @@ export class OrderService {
           status: OrderStatus.PENDING,
           coupon: dto.discountCode,
         });
-      } else {
-        order = this.orderRepo.create({
-          user,
-          product,
-          totalAmount: amount,
-          quantity: dto.quantity,
-          status: OrderStatus.PENDING,
-        });
       }
+    } else {
+      order = this.orderRepo.create({
+        user,
+        product,
+        totalAmount: amount,
+        quantity: dto.quantity,
+        status: OrderStatus.PENDING,
+      });
     }
 
     const address = this.addressRepo.create(dto);
