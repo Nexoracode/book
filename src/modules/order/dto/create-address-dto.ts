@@ -20,6 +20,5 @@ export class AddressDto {
 
     @ApiProperty({ example: "1234567890" })
     @IsOptional()
-    @IsNotEmpty()
-    postalCode: string;
+    postalCode?: string;
 }

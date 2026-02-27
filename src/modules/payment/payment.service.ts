@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException, NotFoundException, ConflictException } from '@nestjs/common';
-import * as ZarinpalCheckout from 'zarinpal-checkout';
+import Zarinpal from 'zarinpal-node-sdk'
 import { OrderService } from '../order/order.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Invoice } from '../invoice/entities/invoice.entity';
@@ -58,10 +58,13 @@ function getZarinpalErrorMessage(statusCode: number): string {
 const SPECIAL_PRODUCT_ID_FOR_EXTERNAL_API = 2;
 const EXTERNAL_API_URL = process.env.EXTERNAL_API_URL || 'https://api.roohbakhshac.ir/api/site/kole/user/register';
 
+const zarinpal = new Zarinpal({
+  merchantId: process.env.ZARINPAL_MERCHANT_ID,
+  sandbox: process.env.ZARINPAL_SANDBOX == "true",
+})
+
 @Injectable()
 export class PaymentService {
-  private zarinpal: ZarinpalCheckout.ZarinPalInstance;
-
   constructor(
     private orderService: OrderService,
     private productService: ProductService,
@@ -70,14 +73,7 @@ export class PaymentService {
     @InjectRepository(Invoice)
     private invoiceRepo: Repository<Invoice>,
     private readonly dataSource: DataSource,
-  ) {
-    const prodcutoin = process.env.NODE_ENV === 'production';
-    const merchantId = process.env.ZARINPAL_MERCHANT_ID;
-    if (!merchantId) {
-      throw new Error('ZARINPAL_MERCHANT_ID is not defined in environment variables.');
-    }
-    this.zarinpal = ZarinpalCheckout.create(merchantId, true);
-  }
+  ) { }
 
   private async logSuspiciousTransaction(manager: EntityManager, context: {
     orderId: number,
@@ -161,20 +157,26 @@ export class PaymentService {
     }
 
     const amount = parseFloat(order.totalAmount.toString()) + parseFloat(product.postage.toString());
+    const finalAmount = parseInt(amount + '0');
 
     try {
-      const response = await this.zarinpal.PaymentRequest({
-        Amount: amount,
-        CallbackURL: dto.callbackUrl,
-        Description: `خرید کتاب ${product.name}`,
+      const response = await zarinpal.payments.create({
+        amount: finalAmount,
+        callback_url: dto.callbackUrl,
+        description: `خرید کتاب ${product.name}`,
+        mobile: order.user?.phone,
       });
 
-      if (response.status === ZarinpalStatus.SUCCESS) {
+      if (response.data.code === ZarinpalStatus.SUCCESS) {
         await this.orderService.updateStatus(order.id, OrderStatus.PROCESSING);
         return {
           message: 'لینک درگاه پرداخت، با موفقیت ایجاد شد',
           statusCode: 200,
-          data: response, // Zarinpal response data
+          data: {
+            status: 100,
+            authority: response.data.authority,
+            url: `${process.env.ZARINPAL_PAYMENT_URL}/${response.data.authority}`
+          }, // Zarinpal response data
         };
       } else {
         // Zarinpal returned an error status for the request itself
@@ -192,7 +194,7 @@ export class PaymentService {
         };
       }
     } catch (e: any) {
-      console.error(`Error during Zarinpal PaymentRequest for order ${dto.orderId}:`, e);
+      console.error(`Error during Zarinpal PaymentRequest for order ${dto.orderId}:`);
 
       let zarinpalErrorStatus: number | null = null;
 
@@ -321,29 +323,29 @@ export class PaymentService {
 
       const product = await this.productService.findOne(order.product.id);
       const amount = parseFloat(order.totalAmount.toString()) + parseFloat(product.postage.toString());
+      const finalAmount = parseInt(amount + '0');
       try {
-        const response = await this.zarinpal.PaymentVerification({ Amount: amount, Authority: authority });
-
-        if ([ZarinpalStatus.SUCCESS, ZarinpalStatus.SUCCESS_SETTLED].includes(response.status)) {
-          const duplicateTransaction = await manager.findOne(Invoice, { where: { transactionId: Number(response.refId) } });
+        const response = await zarinpal.verifications.verify({ amount: finalAmount, authority: authority });
+        if ([ZarinpalStatus.SUCCESS, ZarinpalStatus.SUCCESS_SETTLED].includes(response.data.code)) {
+          const duplicateTransaction = await manager.findOne(Invoice, { where: { transactionId: Number(response.data.ref_id) } });
           if (duplicateTransaction) {
             return { message: 'تراکنش تکراری است.', statusCode: 409, data: duplicateTransaction };
           }
 
           return await this._completePaymentAndOrder(manager, order, product, amount, {
-            cardPan: response['cardPan'],
-            transactionId: Number(response.refId),
+            cardPan: response.data.card_pan,
+            transactionId: Number(response.data.ref_id),
             paymentMethod: 'Zarinpal',
           });
         } else {
           await this.logSuspiciousTransaction(manager, {
             orderId: order.id,
-            transactionId: response.refId?.toString(),
+            transactionId: response.data.ref_id?.toString(),
             amount,
             paymentMethod: 'Zarinpal',
-            statusMessage: `Verification failed: ${getZarinpalErrorMessage(response.status)}`,
-            rawResponse: response,
-            errorCode: `ZARINPAL_VERIFICATION_FAILED_${response.status}`,
+            statusMessage: `Verification failed: ${getZarinpalErrorMessage(response.data.code)}`,
+            rawResponse: response.data,
+            errorCode: `ZARINPAL_VERIFICATION_FAILED_${response.data.code}`,
             authority,
           });
         }
@@ -356,7 +358,7 @@ export class PaymentService {
       catch (e: any) {
         await this.logSuspiciousTransaction(manager, {
           orderId: order.id,
-          transactionId: e?.response?.refId?.toString() || null,
+          transactionId: e?.response?.ref_id?.toString() || null,
           amount,
           paymentMethod: 'Zarinpal',
           statusMessage: e?.message || 'Error during verification',

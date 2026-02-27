@@ -7,7 +7,7 @@ export class PaymentPayDto {
     @IsInt()
     orderId: number;
 
-    @ApiProperty({ example: "http://localhost:3000?orderId=822", description: 'callback url' })
+    @ApiProperty({ example: "https://shop.roohbakhshac.ir/verify?orderId=822", description: 'callback url' })
     @IsString()
     callbackUrl: string;
 

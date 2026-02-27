@@ -1228,7 +1228,7 @@
           },
           "callbackUrl": {
             "type": "string",
-            "example": "http://localhost:3000?orderId=822",
+            "example": "https://shop.roohbakhshac.ir/verify?orderId=822",
             "description": "callback url"
           }
         },

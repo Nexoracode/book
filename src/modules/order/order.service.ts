@@ -106,7 +106,6 @@ export class OrderService {
     // اعمال کد تخفیف در صورت ارسال
     if (dto.discountCode && this.discountService) {
       const result = await this.discountService.applyDiscount(dto.discountCode, amount, user.phone);
-      console.log(result);
       if (result) {
         amount = result.discountedAmount;
         order = this.orderRepo.create({
