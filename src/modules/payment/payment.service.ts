@@ -337,17 +337,6 @@ export class PaymentService {
             transactionId: Number(response.data.ref_id),
             paymentMethod: 'Zarinpal',
           });
-        } else {
-          await this.logSuspiciousTransaction(manager, {
-            orderId: order.id,
-            transactionId: response.data.ref_id?.toString(),
-            amount,
-            paymentMethod: 'Zarinpal',
-            statusMessage: `Verification failed: ${getZarinpalErrorMessage(response.data.code)}`,
-            rawResponse: response.data,
-            errorCode: `ZARINPAL_VERIFICATION_FAILED_${response.data.code}`,
-            authority,
-          });
         }
         const failedOrder = manager.merge(Order, order, { id: order.id, status: OrderStatus.FAIL_VERIFY });
         await manager.save(Order, failedOrder);
@@ -358,11 +347,11 @@ export class PaymentService {
       catch (e: any) {
         await this.logSuspiciousTransaction(manager, {
           orderId: order.id,
-          transactionId: e?.response?.ref_id?.toString() || null,
+          transactionId: e?.response?.data.ref_id?.toString() || null,
           amount,
           paymentMethod: 'Zarinpal',
           statusMessage: e?.message || 'Error during verification',
-          rawResponse: e?.response || e?.message || null,
+          rawResponse: e?.response.error || e?.message || null,
           errorCode: 'ZARINPAL_THROWN_ERR',
           authority,
         });
