@@ -101,19 +101,32 @@ export class OrderService {
 
     let amount = product.discount === null ? (product.price * dto.quantity) : (product.discount! * dto.quantity);
 
+    var order;
+
     // اعمال کد تخفیف در صورت ارسال
     if (dto.discountCode && this.discountService) {
-      const { discountedAmount } = await this.discountService.applyDiscount(dto.discountCode, amount);
-      amount = discountedAmount;
+      const result = await this.discountService.applyDiscount(dto.discountCode, amount, user.phone);
+      console.log(result);
+      if (result) {
+        amount = result.discountedAmount;
+        order = this.orderRepo.create({
+          user,
+          product,
+          totalAmount: amount,
+          quantity: dto.quantity,
+          status: OrderStatus.PENDING,
+          coupon: dto.discountCode,
+        });
+      } else {
+        order = this.orderRepo.create({
+          user,
+          product,
+          totalAmount: amount,
+          quantity: dto.quantity,
+          status: OrderStatus.PENDING,
+        });
+      }
     }
-
-    const order = this.orderRepo.create({
-      user,
-      product,
-      totalAmount: amount,
-      quantity: dto.quantity,
-      status: OrderStatus.PENDING,
-    });
 
     const address = this.addressRepo.create(dto);
     await this.addressRepo.save(address);

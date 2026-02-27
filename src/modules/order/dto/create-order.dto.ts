@@ -27,5 +27,5 @@ export class CreateOrderDto extends PartialType(AddressDto) {
     @ApiPropertyOptional({ example: 'SUMMER20', description: 'کد تخفیف (اختیاری)' })
     @IsOptional()
     @IsString()
-    discountCode?: string;
+    discountCode?: string | null;
 }

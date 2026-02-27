@@ -10,11 +10,12 @@ import { DiscountService } from './discount.service';
 import { CreateDiscountDto } from './dto/create-discount.dto';
 import { UpdateDiscountDto } from './dto/update-discount.dto';
 import { Discount } from './entities/discount.entity';
+import { ApplyDiscount } from './dto/aply-discount.dto';
 
 @ApiTags('Discount')
 @Controller('discount')
 export class DiscountController {
-  constructor(private readonly discountService: DiscountService) {}
+  constructor(private readonly discountService: DiscountService) { }
 
   // ─── CREATE ────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,11 @@ export class DiscountController {
   @ApiResponse({ status: 404, description: 'کد تخفیف یافت نشد.' })
   findOne(@Param('id') id: string) {
     return this.discountService.findOne(+id);
+  }
+
+  @Post('apply')
+  async applyDiscount(@Body() apply: ApplyDiscount) {
+    return this.discountService.apply(apply);
   }
 
   // ─── UPDATE ────────────────────────────────────────────────────────────────

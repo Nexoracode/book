@@ -4,13 +4,17 @@ import { Repository } from 'typeorm';
 import { Discount, DiscountType } from './entities/discount.entity';
 import { CreateDiscountDto } from './dto/create-discount.dto';
 import { UpdateDiscountDto } from './dto/update-discount.dto';
+import { ApplyDiscount } from './dto/aply-discount.dto';
+import { Order, OrderStatus } from '../order/entities/order.entity';
 
 @Injectable()
 export class DiscountService {
   constructor(
     @InjectRepository(Discount)
     private discountRepo: Repository<Discount>,
-  ) {}
+    @InjectRepository(Order)
+    private orderRepo: Repository<Order>,
+  ) { }
 
   async create(dto: CreateDiscountDto): Promise<Discount> {
     const existing = await this.discountRepo.findOne({ where: { code: dto.code } });
@@ -60,8 +64,14 @@ export class DiscountService {
    * اعتبارسنجی کد تخفیف و برگرداندن مبلغ نهایی پس از اعمال تخفیف
    * این متد توسط OrderService صدا زده می‌شود
    */
-  async applyDiscount(code: string, originalAmount: number): Promise<{ discountedAmount: number; discount: Discount }> {
-    const discount = await this.discountRepo.findOne({ where: { code } });
+
+  async apply(dto: ApplyDiscount) {
+    const order = await this.orderRepo.findOne({ where: { user: { phone: dto.phone }, status: OrderStatus.COMPLETED, coupon: dto.code } })
+    const discount = await this.discountRepo.findOne({ where: { code: dto.code } });
+
+    if (order) {
+      throw new BadRequestException('شما از این کدتخفیف استفاده کرده اید.');
+    }
 
     if (!discount) {
       throw new BadRequestException('کد تخفیف نامعتبر است.');
@@ -79,6 +89,39 @@ export class DiscountService {
       throw new BadRequestException('ظرفیت استفاده از این کد تخفیف تمام شده است.');
     }
 
+    return {
+      message: 'کد تخفیف برای شما اعمال شد',
+      data: {
+        type: discount.type,
+        value: Number(discount.value).toFixed(0),
+      }
+    }
+  }
+
+  async applyDiscount(code: string, originalAmount: number, phone: string) {
+    const discount = await this.discountRepo.findOne({ where: { code } });
+
+    const order = await this.orderRepo.findOne({ where: { user: { phone }, status: OrderStatus.COMPLETED, coupon: code } })
+    if (order) {
+      return false;
+    }
+
+    if (!discount) {
+      return false;
+    }
+
+    if (!discount.isActive) {
+      return false;
+    }
+
+    if (discount.expiresAt && new Date() > new Date(discount.expiresAt)) {
+      return false;
+    }
+
+    if (discount.maxUses !== null && discount.usedCount >= discount.maxUses) {
+      return false;
+    }
+
     let discountedAmount: number;
 
     if (discount.type === DiscountType.PERCENTAGE) {
@@ -87,10 +130,6 @@ export class DiscountService {
     } else {
       discountedAmount = Math.max(0, originalAmount - Number(discount.value));
     }
-
-    // افزایش تعداد استفاده
-    discount.usedCount += 1;
-    await this.discountRepo.save(discount);
 
     return { discountedAmount, discount };
   }

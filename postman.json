@@ -348,10 +348,254 @@
         ]
       }
     },
+    "/api/discount": {
+      "post": {
+        "description": "یک کد تخفیف جدید با نوع درصدی یا مبلغ ثابت ایجاد می‌کند.",
+        "operationId": "DiscountController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDiscountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "کد تخفیف با موفقیت ساخته شد.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Discount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "کد تخفیف تکراری است یا داده‌ها نامعتبر هستند."
+          }
+        },
+        "summary": "ساخت کد تخفیف جدید",
+        "tags": [
+          "Discount"
+        ]
+      },
+      "get": {
+        "description": "تمام کدهای تخفیف را به ترتیب جدیدترین برمی‌گرداند.",
+        "operationId": "DiscountController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "لیست کدهای تخفیف.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Discount"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "لیست همه کدهای تخفیف",
+        "tags": [
+          "Discount"
+        ]
+      }
+    },
+    "/api/discount/{id}": {
+      "get": {
+        "description": "اطلاعات یک کد تخفیف را بر اساس ID برمی‌گرداند.",
+        "operationId": "DiscountController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "شناسه کد تخفیف",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "کد تخفیف یافت شد.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Discount"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "کد تخفیف یافت نشد."
+          }
+        },
+        "summary": "دریافت یک کد تخفیف",
+        "tags": [
+          "Discount"
+        ]
+      },
+      "patch": {
+        "description": "فیلدهای ارسال شده را آپدیت می‌کند. فیلدهای ارسال نشده بدون تغییر باقی می‌مانند.",
+        "operationId": "DiscountController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "شناسه کد تخفیف",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDiscountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "کد تخفیف با موفقیت ویرایش شد.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Discount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "کد تخفیف تکراری است یا داده‌ها نامعتبر هستند."
+          },
+          "404": {
+            "description": "کد تخفیف یافت نشد."
+          }
+        },
+        "summary": "ویرایش کد تخفیف",
+        "tags": [
+          "Discount"
+        ]
+      },
+      "delete": {
+        "description": "یک کد تخفیف را به صورت دائمی حذف می‌کند.",
+        "operationId": "DiscountController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "شناسه کد تخفیف",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "کد تخفیف با موفقیت حذف شد."
+          },
+          "404": {
+            "description": "کد تخفیف یافت نشد."
+          }
+        },
+        "summary": "حذف کد تخفیف",
+        "tags": [
+          "Discount"
+        ]
+      }
+    },
+    "/api/discount/apply": {
+      "post": {
+        "operationId": "DiscountController_applyDiscount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyDiscount"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Discount"
+        ]
+      }
+    },
+    "/api/discount/{id}/toggle": {
+      "patch": {
+        "description": "وضعیت isActive یک کد تخفیف را toggle می‌کند.",
+        "operationId": "DiscountController_toggleActive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "شناسه کد تخفیف",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "وضعیت کد تخفیف تغییر کرد.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Discount"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "کد تخفیف یافت نشد."
+          }
+        },
+        "summary": "فعال / غیرفعال کردن کد تخفیف",
+        "tags": [
+          "Discount"
+        ]
+      }
+    },
     "/api/payment/pay": {
       "post": {
         "operationId": "PaymentController_paymentRequest",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentPayDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": ""
@@ -862,6 +1106,11 @@
           "quantity": {
             "type": "number",
             "example": 2
+          },
+          "discountCode": {
+            "type": "object",
+            "example": "SUMMER20",
+            "description": "کد تخفیف (اختیاری)"
           }
         },
         "required": [
@@ -870,6 +1119,122 @@
           "phone",
           "productId",
           "quantity"
+        ]
+      },
+      "CreateDiscountDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "SUMMER20",
+            "description": "کد تخفیف یکتا"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ],
+            "example": "percentage",
+            "description": "نوع تخفیف: درصدی یا مبلغ ثابت"
+          },
+          "value": {
+            "type": "number",
+            "example": 20,
+            "description": "مقدار تخفیف (درصد یا مبلغ)"
+          },
+          "maxUses": {
+            "type": "number",
+            "example": 100,
+            "description": "حداکثر تعداد استفاده (خالی = نامحدود)"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-12-31T23:59:59Z",
+            "description": "تاریخ انقضا (خالی = بدون انقضا)"
+          }
+        },
+        "required": [
+          "code",
+          "type",
+          "value"
+        ]
+      },
+      "Discount": {
+        "type": "object",
+        "properties": {}
+      },
+      "ApplyDiscount": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "کد تخفیف",
+            "example": "SAVE20"
+          },
+          "phone": {
+            "type": "string",
+            "description": "phone"
+          }
+        },
+        "required": [
+          "code",
+          "phone"
+        ]
+      },
+      "UpdateDiscountDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "SUMMER20",
+            "description": "کد تخفیف یکتا"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ],
+            "example": "percentage",
+            "description": "نوع تخفیف: درصدی یا مبلغ ثابت"
+          },
+          "value": {
+            "type": "number",
+            "example": 20,
+            "description": "مقدار تخفیف (درصد یا مبلغ)"
+          },
+          "maxUses": {
+            "type": "number",
+            "example": 100,
+            "description": "حداکثر تعداد استفاده (خالی = نامحدود)"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2025-12-31T23:59:59Z",
+            "description": "تاریخ انقضا (خالی = بدون انقضا)"
+          }
+        }
+      },
+      "PaymentPayDto": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "number",
+            "example": 1,
+            "description": "order ID"
+          },
+          "callbackUrl": {
+            "type": "string",
+            "example": "http://localhost:3000?orderId=822",
+            "description": "callback url"
+          }
+        },
+        "required": [
+          "orderId",
+          "callbackUrl"
         ]
       },
       "CreateUserDto": {

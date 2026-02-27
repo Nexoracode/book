@@ -9,6 +9,6 @@ export class PaymentPayDto {
 
     @ApiProperty({ example: "http://localhost:3000?orderId=822", description: 'callback url' })
     @IsString()
-    callBack: string;
+    callbackUrl: string;
 
 }

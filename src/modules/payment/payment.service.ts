@@ -13,6 +13,8 @@ import { runInTransaction } from 'src/common/helpers/transaction'; // Assuming t
 import { Product } from '../product/entities/product.entity';
 import * as xlsx from 'xlsx';
 import { SuspiciousTransaction } from '../suspicios/entities/supicious.entity';
+import { PaymentPayDto } from './dto/payment-pay.dto';
+import { Discount } from '../discount/entities/discount.entity';
 
 // Define constants for Zarinpal statuses and magic numbers
 enum ZarinpalStatus {
@@ -69,11 +71,12 @@ export class PaymentService {
     private invoiceRepo: Repository<Invoice>,
     private readonly dataSource: DataSource,
   ) {
+    const prodcutoin = process.env.NODE_ENV === 'production';
     const merchantId = process.env.ZARINPAL_MERCHANT_ID;
     if (!merchantId) {
       throw new Error('ZARINPAL_MERCHANT_ID is not defined in environment variables.');
     }
-    this.zarinpal = ZarinpalCheckout.create(merchantId, false);
+    this.zarinpal = ZarinpalCheckout.create(merchantId, true);
   }
 
   private async logSuspiciousTransaction(manager: EntityManager, context: {
@@ -136,8 +139,8 @@ export class PaymentService {
     }
   }
 
-  async paymentRequest(orderId: number, callbackUrl: string) {
-    const order = await this.orderService.findOne(orderId);
+  async paymentRequest(dto: PaymentPayDto) {
+    const order = await this.orderService.findOne(dto.orderId);
     if (!order) {
       return {
         message: 'سفارش یافت نشد.',
@@ -162,7 +165,7 @@ export class PaymentService {
     try {
       const response = await this.zarinpal.PaymentRequest({
         Amount: amount,
-        CallbackURL: callbackUrl,
+        CallbackURL: dto.callbackUrl,
         Description: `خرید کتاب ${product.name}`,
       });
 
@@ -189,7 +192,7 @@ export class PaymentService {
         };
       }
     } catch (e: any) {
-      console.error(`Error during Zarinpal PaymentRequest for order ${orderId}:`, e);
+      console.error(`Error during Zarinpal PaymentRequest for order ${dto.orderId}:`, e);
 
       let zarinpalErrorStatus: number | null = null;
 
@@ -287,6 +290,14 @@ export class PaymentService {
       this.smsService.sendSms(phone, `${firstName} ${lastName}`, paymentDetails.transactionId.toString());
     } catch (e) {
       console.error(`Failed to send SMS for order ${order.id}:`, e.message);
+    }
+
+    if (order.coupon) {
+      const discount = await manager.findOne(Discount, { where: { code: order.coupon } });
+      if (discount) {
+        discount.usedCount = (discount.usedCount || 0) + 1;
+        await manager.save(Discount, discount);
+      }
     }
 
     return {

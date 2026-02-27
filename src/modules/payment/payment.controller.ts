@@ -1,14 +1,14 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-
+import { PaymentPayDto } from './dto/payment-pay.dto';
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) { }
 
   @Post('pay')
-  paymentRequest(@Body('orderId') id: string, @Body('callback') callback: string) {
-    return this.paymentService.paymentRequest(+id, callback);
+  paymentRequest(@Body() dto: PaymentPayDto) {
+    return this.paymentService.paymentRequest(dto);
   }
 
   @Post('verify')

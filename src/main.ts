@@ -14,6 +14,7 @@ async function bootstrap() {
   // app.useGlobalFilters(new AllExceptionsFilter()),
   app.enableCors({
     origin: [
+      'https://172.18.100.165:3000',
       'https://bookshops.liara.run',
       'https://shop.roohbakhshac.ir',
       'http://localhost:3000',

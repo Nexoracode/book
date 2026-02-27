@@ -39,6 +39,9 @@ export class Order {
     @Column({ default: 1 })
     quantity: number;
 
+    @Column({ type: 'varchar', name: 'coupon', nullable: true })
+    coupon?: string | null
+
     @ManyToOne(() => Address)
     @JoinColumn({ name: 'address_id' })
     address: Address
