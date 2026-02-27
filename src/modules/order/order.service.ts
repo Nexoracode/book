@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +9,7 @@ import { User } from '../user/entities/user.entity';
 import { Address } from './entities/address.entity';
 import { FilterOperator, FilterSuffix, Paginate, PaginateQuery, paginate, Paginated } from 'nestjs-paginate'
 import { timestamp } from 'rxjs';
+import { DiscountService } from '../discount/discount.service';
 
 @Injectable()
 export class OrderService {
@@ -16,7 +17,8 @@ export class OrderService {
     @InjectRepository(Order) private orderRepo: Repository<Order>,
     @InjectRepository(Product) private productRepo: Repository<Product>,
     @InjectRepository(User) private userRepo: Repository<User>,
-    @InjectRepository(Address) private addressRepo: Repository<Address>
+    @InjectRepository(Address) private addressRepo: Repository<Address>,
+    @Optional() private discountService: DiscountService,
   ) { }
 
   async updateStatus(orderId: number, status: OrderStatus) {
@@ -97,7 +99,13 @@ export class OrderService {
       await this.userRepo.save(user);
     }
 
-    const amount = product.discount === null ? (product.price * dto.quantity) : (product.discount! * dto.quantity);
+    let amount = product.discount === null ? (product.price * dto.quantity) : (product.discount! * dto.quantity);
+
+    // اعمال کد تخفیف در صورت ارسال
+    if (dto.discountCode && this.discountService) {
+      const { discountedAmount } = await this.discountService.applyDiscount(dto.discountCode, amount);
+      amount = discountedAmount;
+    }
 
     const order = this.orderRepo.create({
       user,

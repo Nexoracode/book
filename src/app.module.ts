@@ -12,6 +12,7 @@ import { SmsModule } from './modules/sms/sms.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { MediaModule } from './modules/media/media.module';
+import { DiscountModule } from './modules/discount/discount.module';
 
 ConfigModule.forRoot();
 @Module({
@@ -25,7 +26,8 @@ ConfigModule.forRoot();
     SmsModule,
     AuthModule,
     EmployeesModule,
-    MediaModule
+    MediaModule,
+    DiscountModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,8 +1,7 @@
-import { PartialType } from "@nestjs/swagger";
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { CreateUserDto } from "src/modules/user/dto/create-user.dto";
 import { AddressDto } from "./create-address-dto";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 export class CreateOrderDto extends PartialType(AddressDto) {
 
     @ApiProperty({ example: 'رضا' })
@@ -24,4 +23,9 @@ export class CreateOrderDto extends PartialType(AddressDto) {
     @ApiProperty({ example: 2 })
     @IsNotEmpty()
     quantity: number;
+
+    @ApiPropertyOptional({ example: 'SUMMER20', description: 'کد تخفیف (اختیاری)' })
+    @IsOptional()
+    @IsString()
+    discountCode?: string;
 }
